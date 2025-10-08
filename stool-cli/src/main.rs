@@ -1,10 +1,7 @@
-mod config;
-mod error;
-mod modules;
-mod utils;
-
 use clap::{Parser, Subcommand};
-use error::Result;
+use stool_core::config::Config;
+use stool_core::error::Result;
+use stool_modules::ssh;
 
 #[derive(Parser)]
 #[command(name = "stool")]
@@ -28,8 +25,8 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Ssh { config } => {
-            let cfg = config::Config::load(&config)?;
-            modules::ssh::connect(&cfg.servers)?;
+            let cfg = Config::load(&config)?;
+            ssh::connect(&cfg.servers)?;
         }
     }
 

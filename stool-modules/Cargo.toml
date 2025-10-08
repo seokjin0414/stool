@@ -1,0 +1,10 @@
+[package]
+name = "stool-modules"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+stool-core = { path = "../stool-core" }
+stool-utils = { path = "../stool-utils" }

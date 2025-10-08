@@ -1,0 +1,15 @@
+[package]
+name = "stool-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "stool"
+path = "src/main.rs"
+
+[dependencies]
+stool-core = { path = "../stool-core" }
+stool-modules = { path = "../stool-modules" }
+clap = { workspace = true }

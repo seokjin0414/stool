@@ -1,5 +1,5 @@
-use crate::error::{Result, StoolError, StoolErrorType};
 use dialoguer::{theme::ColorfulTheme, Select};
+use stool_core::error::{Result, StoolError, StoolErrorType};
 
 pub fn select_from_list(prompt: &str, items: &[String]) -> Result<usize> {
     Select::with_theme(&ColorfulTheme::default())

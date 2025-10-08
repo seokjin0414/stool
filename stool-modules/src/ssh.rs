@@ -1,7 +1,7 @@
-use crate::config::Server;
-use crate::error::{Result, StoolError, StoolErrorType};
-use crate::utils::interactive;
 use std::process::Command;
+use stool_core::config::Server;
+use stool_core::error::{Result, StoolError, StoolErrorType};
+use stool_utils::interactive;
 
 pub fn connect(servers: &[Server]) -> Result<()> {
     let items: Vec<String> = servers

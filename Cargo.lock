@@ -326,13 +326,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
-name = "stool"
+name = "stool-cli"
 version = "0.1.0"
 dependencies = [
  "clap",
- "dialoguer",
+ "stool-core",
+ "stool-modules",
+]
+
+[[package]]
+name = "stool-core"
+version = "0.1.0"
+dependencies = [
  "serde",
  "serde_yaml",
+]
+
+[[package]]
+name = "stool-modules"
+version = "0.1.0"
+dependencies = [
+ "stool-core",
+ "stool-utils",
+]
+
+[[package]]
+name = "stool-utils"
+version = "0.1.0"
+dependencies = [
+ "dialoguer",
+ "stool-core",
 ]
 
 [[package]]
