@@ -1,0 +1,46 @@
+# Rust 빌드 결과물
+/target/
+**/*.rs.bk
+
+# IDE 파일
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# AI 관련
+.claude/
+
+# Python 환경
+.venv/
+
+# 환경 변수 및 설정
+.env
+.env.local
+.env.*.local
+config.yaml
+
+# 로그 파일
+*.log
+logs/
+
+# 운영체제 파일
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 임시 파일
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# 테스트 데이터
+test_data/
+sample_data/
