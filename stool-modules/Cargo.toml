@@ -8,3 +8,4 @@ license.workspace = true
 [dependencies]
 stool-core = { path = "../stool-core" }
 stool-utils = { path = "../stool-utils" }
+regex = "1"

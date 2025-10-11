@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use stool_core::config::Config;
 use stool_core::error::Result;
-use stool_modules::{ssh, update};
+use stool_modules::{filesystem, ssh, update};
 
 #[derive(Parser)]
 #[command(name = "stool")]
@@ -25,6 +25,27 @@ enum Commands {
         #[arg(long, help = "Update Rust toolchain only")]
         rustup: bool,
     },
+    #[command(short_flag = 'f', about = "Filesystem operations")]
+    Filesystem {
+        #[command(subcommand)]
+        command: FilesystemCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum FilesystemCommands {
+    #[command(about = "Find files by pattern")]
+    Find {
+        #[arg(help = "Search pattern (exact, glob, or partial)")]
+        pattern: String,
+        #[arg(short, long, help = "Search path (default: current directory)")]
+        path: Option<String>,
+    },
+    #[command(about = "Count files and directories")]
+    Count {
+        #[arg(help = "Target path (default: current directory)")]
+        path: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -39,6 +60,14 @@ fn main() -> Result<()> {
             (true, false) => update::update_brew()?,
             (false, true) => update::update_rustup()?,
             _ => update::update_all()?,
+        },
+        Commands::Filesystem { command } => match command {
+            FilesystemCommands::Find { pattern, path } => {
+                filesystem::find(&pattern, path.as_deref())?;
+            }
+            FilesystemCommands::Count { path } => {
+                filesystem::count(path.as_deref())?;
+            }
         },
     }
 
