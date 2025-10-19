@@ -5,19 +5,30 @@ set -e
 echo "🚀 Stool Installation Script"
 echo "============================"
 
+# config.yaml 경로 설정
+CONFIG_PATH="${1:-config.yaml}"
+
 # config.yaml 체크
 echo "📋 Checking config.yaml..."
-if [ ! -f "config.yaml" ]; then
-    echo "❌ config.yaml not found!"
+if [ ! -f "$CONFIG_PATH" ]; then
+    echo "❌ config.yaml not found at: $CONFIG_PATH"
     echo ""
     echo "Please create config.yaml before installation:"
     echo "  cp config.yaml.example config.yaml"
     echo "  vim config.yaml"
     echo ""
-    echo "Edit the file with your server information."
+    echo "Or specify config path:"
+    echo "  ./install.sh /path/to/config.yaml"
     exit 1
 fi
-echo "✅ config.yaml found"
+echo "✅ config.yaml found at: $CONFIG_PATH"
+
+# config.yaml 복사 (프로젝트 루트에)
+if [ "$CONFIG_PATH" != "config.yaml" ]; then
+    echo "📋 Copying config to project root..."
+    cp "$CONFIG_PATH" config.yaml
+    echo "✅ Config copied to config.yaml"
+fi
 
 # Rust 설치 체크
 echo "📋 Checking Rust installation..."
@@ -77,6 +88,21 @@ else
     echo "⚠️  Permission required. Running with sudo..."
     sudo ln -sf "$STOOL_DIR/stool" "$SYMLINK_PATH"
     echo "✅ Command registered to $SYMLINK_PATH"
+fi
+
+# Zsh completion 설치
+echo "📝 Installing zsh completion..."
+COMPLETION_DIR="/usr/local/share/zsh/site-functions"
+if [ -d "$COMPLETION_DIR" ] || mkdir -p "$COMPLETION_DIR" 2>/dev/null; then
+    "$STOOL_DIR/stool" completion zsh > "$COMPLETION_DIR/_stool" 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "✅ Zsh completion installed to $COMPLETION_DIR/_stool"
+        echo "💡 Restart your shell or run: source ~/.zshrc"
+    else
+        echo "⚠️  Failed to generate completion. Skipping..."
+    fi
+else
+    echo "⚠️  Cannot create $COMPLETION_DIR. Skipping completion install..."
 fi
 
 # 설치 확인

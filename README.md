@@ -9,7 +9,7 @@ git clone https://github.com/seokjin0414/stool.git
 cd stool
 cp config.yaml.example config.yaml
 vim config.yaml
-./install.sh
+./install.sh                        # Or: ./install.sh /path/to/config.yaml
 stool --help
 ```
 
@@ -32,6 +32,10 @@ stool --help
 ### Filesystem Operations
 - Find files by pattern (exact, glob, or partial match)
 - Count files and directories
+
+### Shell Completion
+- Auto-completion for Zsh, Bash, Fish, PowerShell
+- Automatically installed with install.sh
 
 ## Installation
 
@@ -59,6 +63,12 @@ The script will:
 - Build release binary with embedded config.yaml
 - Install to `~/Library/Stool/stool`
 - Create symlink at `/usr/local/bin/stool`
+- Install zsh completion
+
+**Alternative: Specify config path**
+```bash
+./install.sh /path/to/my-config.yaml
+```
 
 ### Manual Installation
 
@@ -76,6 +86,10 @@ cp target/release/stool ~/Library/Stool/
 
 # 4. Create symlink
 sudo ln -sf ~/Library/Stool/stool /usr/local/bin/stool
+
+# 5. Install shell completion (optional)
+stool completion zsh | sudo tee /usr/local/share/zsh/site-functions/_stool
+source ~/.zshrc
 ```
 
 ## Usage
@@ -109,6 +123,14 @@ stool -f find "main"              # Find with partial match
 stool -f find "*.toml" -p ./src   # Find with custom path
 stool -f count                    # Count in current directory
 stool -f count ./src              # Count in specific path
+```
+
+### Shell Completion
+```bash
+stool completion zsh              # Generate zsh completion
+stool completion bash             # Generate bash completion
+stool completion fish             # Generate fish completion
+stool completion powershell       # Generate powershell completion
 ```
 
 ## Configuration
@@ -146,6 +168,27 @@ cp target/release/stool ~/Library/Stool/
 
 # Or use external config without rebuild
 stool ssh --config /path/to/other-config.yaml
+```
+
+## Shell Completion Setup
+
+### Zsh (Oh My Zsh)
+```bash
+# Automatically installed by install.sh
+# Or manually:
+stool completion zsh | sudo tee /usr/local/share/zsh/site-functions/_stool
+source ~/.zshrc
+```
+
+### Bash
+```bash
+stool completion bash | sudo tee /etc/bash_completion.d/stool
+source ~/.bashrc
+```
+
+### Fish
+```bash
+stool completion fish > ~/.config/fish/completions/stool.fish
 ```
 
 ## Project Structure

@@ -13,3 +13,4 @@ path = "src/main.rs"
 stool-core = { path = "../stool-core" }
 stool-modules = { path = "../stool-modules" }
 clap = { workspace = true }
+clap_complete = { workspace = true }

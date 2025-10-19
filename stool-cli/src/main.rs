@@ -1,4 +1,6 @@
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{ArgAction, CommandFactory, Parser, Subcommand};
+use clap_complete::{generate, Shell};
+use std::io;
 use stool_core::config::Config;
 use stool_core::error::Result;
 use stool_modules::{filesystem, ssh, update};
@@ -40,6 +42,11 @@ enum Commands {
     Filesystem {
         #[command(subcommand)]
         command: FilesystemCommands,
+    },
+    #[command(about = "Generate shell completion script")]
+    Completion {
+        #[arg(value_enum, help = "Shell type (bash, zsh, fish, powershell)")]
+        shell: Shell,
     },
 }
 
@@ -84,6 +91,10 @@ fn main() -> Result<()> {
                 filesystem::count(path.as_deref())?;
             }
         },
+        Some(Commands::Completion { shell }) => {
+            let mut cmd = Cli::command();
+            generate(shell, &mut cmd, "stool", &mut io::stdout());
+        }
         None => {
             // Version flag is already handled by clap
             Cli::parse_from(["stool", "--help"]);
