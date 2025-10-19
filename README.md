@@ -20,6 +20,8 @@ stool --help
 - Multiple authentication methods:
   - PEM key authentication
   - Password authentication (with expect)
+    - Auto-accepts host key fingerprint
+    - Auto-enters password
   - Default SSH key
 - Server configuration embedded at build time
 - External config file support

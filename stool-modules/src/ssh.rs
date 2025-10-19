@@ -34,8 +34,15 @@ pub fn connect(servers: &[Server]) -> Result<()> {
             .arg(format!(
                 r#"
                 spawn ssh {user}@{ip}
-                expect "password:"
-                send "{pass}\r"
+                expect {{
+                    "yes/no" {{
+                        send "yes\r"
+                        exp_continue
+                    }}
+                    "password:" {{
+                        send "{pass}\r"
+                    }}
+                }}
                 interact
                 "#,
                 user = server.user,
