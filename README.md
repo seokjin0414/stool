@@ -1,0 +1,197 @@
+# Stool
+
+A personal CLI tool for Mac/Linux terminal tasks written in Rust.
+
+## Quick Start
+
+```bash
+git clone https://github.com/seokjin0414/stool.git
+cd stool
+cp config.yaml.example config.yaml
+vim config.yaml
+./install.sh
+stool --help
+```
+
+## Features
+
+### SSH Connection
+- Interactive server selection menu
+- Multiple authentication methods:
+  - PEM key authentication
+  - Password authentication (with expect)
+  - Default SSH key
+- Server configuration embedded at build time
+- External config file support
+
+### System Update
+- Update Homebrew packages
+- Update Rust toolchain
+- Selective or batch updates
+
+### Filesystem Operations
+- Find files by pattern (exact, glob, or partial match)
+- Count files and directories
+
+## Installation
+
+### Prerequisites
+- Rust toolchain (automatically installed by install.sh)
+- macOS or Linux
+
+### Quick Install
+
+```bash
+# 1. Clone repository
+git clone https://github.com/seokjin0414/stool.git
+cd stool
+
+# 2. Create config.yaml
+cp config.yaml.example config.yaml
+vim config.yaml  # Edit with your server information
+
+# 3. Run installation script
+./install.sh
+```
+
+The script will:
+- Check/install Rust
+- Build release binary with embedded config.yaml
+- Install to `~/Library/Stool/stool`
+- Create symlink at `/usr/local/bin/stool`
+
+### Manual Installation
+
+```bash
+# 1. Create config.yaml (required)
+cp config.yaml.example config.yaml
+vim config.yaml
+
+# 2. Build release
+cargo build --release
+
+# 3. Install binary
+mkdir -p ~/Library/Stool
+cp target/release/stool ~/Library/Stool/
+
+# 4. Create symlink
+sudo ln -sf ~/Library/Stool/stool /usr/local/bin/stool
+```
+
+## Usage
+
+### Help and Version
+```bash
+stool --help
+stool --version
+```
+
+### SSH Connection
+```bash
+stool ssh                          # Use embedded config.yaml
+stool -s                           # Short flag
+stool ssh --config servers.yaml    # Use external config file
+```
+
+### System Update
+```bash
+stool update           # Update both brew and rustup
+stool -u               # Short flag
+stool -u --brew        # Update Homebrew only
+stool -u --rustup      # Update Rust toolchain only
+```
+
+### Filesystem Operations
+```bash
+stool -f find "*.rs"              # Find with glob pattern
+stool -f find "main.rs"           # Find exact filename
+stool -f find "main"              # Find with partial match
+stool -f find "*.toml" -p ./src   # Find with custom path
+stool -f count                    # Count in current directory
+stool -f count ./src              # Count in specific path
+```
+
+## Configuration
+
+### config.yaml Format
+```yaml
+servers:
+  - name: "Production Server"
+    ip: "192.168.1.100"
+    user: "admin"
+    password: "your-password"  # Optional: password authentication
+
+  - name: "Development Server"
+    ip: "192.168.1.101"
+    user: "dev"
+    key_path: "~/.ssh/id_rsa"  # Optional: PEM key authentication
+
+  - name: "Staging Server"
+    ip: "10.0.0.50"
+    user: "deploy"
+    # No password or key_path - uses default SSH authentication
+```
+
+### Authentication Priority
+1. `key_path` - PEM key authentication
+2. `password` - Password with expect script
+3. Default - Standard SSH connection
+
+### Updating Configuration
+```bash
+# Edit config and rebuild
+vim config.yaml
+cargo build --release
+cp target/release/stool ~/Library/Stool/
+
+# Or use external config without rebuild
+stool ssh --config /path/to/other-config.yaml
+```
+
+## Project Structure
+
+```
+stool/
+├── stool-cli/         # Binary crate (CLI interface)
+├── stool-core/        # Core types and config
+├── stool-modules/     # Feature modules (ssh, update, filesystem)
+└── stool-utils/       # Utilities (interactive UI)
+```
+
+## Security Notes
+
+- `config.yaml` is embedded into the binary at build time
+- Binary contains server information and credentials
+- `config.yaml` is gitignored by default
+- Keep built binaries secure
+- Use external config files for sensitive environments
+
+## Development
+
+### Check Code
+```bash
+cargo check && cargo fmt && cargo clippy -- -D warnings
+```
+
+### Build
+```bash
+cargo build --release
+```
+
+### Test
+```bash
+# Test help
+./target/release/stool --help
+
+# Test filesystem operations
+./target/release/stool -f find "*.toml"
+./target/release/stool -f count .
+```
+
+## License
+
+Personal project by seokjin0414
+
+## Author
+
+seokjin0414 <sars21@hanmail.net>
