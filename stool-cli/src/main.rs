@@ -1,14 +1,21 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 use stool_core::config::Config;
 use stool_core::error::Result;
 use stool_modules::{filesystem, ssh, update};
 
 #[derive(Parser)]
 #[command(name = "stool")]
+#[command(version)]
 #[command(about = "seokjin's CLI tool for Mac/Linux terminal tasks", long_about = None)]
 struct Cli {
+    #[arg(short = 'v', short_alias = 'V', long, action = ArgAction::Version)]
+    version: Option<bool>,
+
+    #[arg(short = 'h', short_alias = 'H', long, action = ArgAction::Help)]
+    help: Option<bool>,
+
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -52,16 +59,16 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Ssh { config } => {
+        Some(Commands::Ssh { config }) => {
             let cfg = Config::load(&config)?;
             ssh::connect(&cfg.servers)?;
         }
-        Commands::Update { brew, rustup } => match (brew, rustup) {
+        Some(Commands::Update { brew, rustup }) => match (brew, rustup) {
             (true, false) => update::update_brew()?,
             (false, true) => update::update_rustup()?,
             _ => update::update_all()?,
         },
-        Commands::Filesystem { command } => match command {
+        Some(Commands::Filesystem { command }) => match command {
             FilesystemCommands::Find { pattern, path } => {
                 filesystem::find(&pattern, path.as_deref())?;
             }
@@ -69,6 +76,10 @@ fn main() -> Result<()> {
                 filesystem::count(path.as_deref())?;
             }
         },
+        None => {
+            // Version flag is already handled by clap
+            Cli::parse_from(["stool", "--help"]);
+        }
     }
 
     Ok(())
