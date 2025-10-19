@@ -30,4 +30,13 @@ impl Config {
                 .with_source(e)
         })
     }
+
+    pub fn load_embedded() -> Result<Self> {
+        let content = include_str!("../../config.yaml");
+        serde_yaml::from_str(content).map_err(|e| {
+            StoolError::new(StoolErrorType::YamlParseError)
+                .with_message("Failed to parse embedded YAML config")
+                .with_source(e)
+        })
+    }
 }

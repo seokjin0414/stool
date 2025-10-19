@@ -22,8 +22,12 @@ struct Cli {
 enum Commands {
     #[command(short_flag = 's', about = "SSH connection")]
     Ssh {
-        #[arg(short, long, default_value = "servers.yaml")]
-        config: String,
+        #[arg(
+            short,
+            long,
+            help = "External config file (default: embedded config.yaml)"
+        )]
+        config: Option<String>,
     },
     #[command(short_flag = 'u', about = "System updates (brew, rustup)")]
     Update {
@@ -60,7 +64,11 @@ fn main() -> Result<()> {
 
     match cli.command {
         Some(Commands::Ssh { config }) => {
-            let cfg = Config::load(&config)?;
+            let cfg = if let Some(path) = config {
+                Config::load(&path)?
+            } else {
+                Config::load_embedded()?
+            };
             ssh::connect(&cfg.servers)?;
         }
         Some(Commands::Update { brew, rustup }) => match (brew, rustup) {

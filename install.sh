@@ -5,6 +5,20 @@ set -e
 echo "🚀 Stool Installation Script"
 echo "============================"
 
+# config.yaml 체크
+echo "📋 Checking config.yaml..."
+if [ ! -f "config.yaml" ]; then
+    echo "❌ config.yaml not found!"
+    echo ""
+    echo "Please create config.yaml before installation:"
+    echo "  cp config.yaml.example config.yaml"
+    echo "  vim config.yaml"
+    echo ""
+    echo "Edit the file with your server information."
+    exit 1
+fi
+echo "✅ config.yaml found"
+
 # Rust 설치 체크
 echo "📋 Checking Rust installation..."
 if command -v rustc &> /dev/null; then
