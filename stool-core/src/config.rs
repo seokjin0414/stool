@@ -8,6 +8,7 @@ pub struct Server {
     pub ip: String,
     pub user: String,
     pub password: Option<String>,
+    pub key_path: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -15,7 +15,19 @@ pub fn connect(servers: &[Server]) -> Result<()> {
 
     println!("선택된 서버: {} ({})", server.name, server.ip);
 
-    if let Some(pass) = &server.password {
+    if let Some(key) = &server.key_path {
+        println!("PEM key로 접속");
+        let status = Command::new("ssh")
+            .arg("-i")
+            .arg(key)
+            .arg(format!("{}@{}", server.user, server.ip))
+            .status()
+            .map_err(|e| StoolError::new(StoolErrorType::SshConnectionFailed).with_source(e))?;
+
+        if !status.success() {
+            return Err(StoolError::new(StoolErrorType::SshConnectionFailed));
+        }
+    } else if let Some(pass) = &server.password {
         println!("PW init...");
         let status = Command::new("expect")
             .arg("-c")

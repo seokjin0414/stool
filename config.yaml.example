@@ -1,0 +1,20 @@
+servers:
+  - name: "Production Server"
+    ip: "192.168.1.100"
+    user: "admin"
+    password: "your-password"  # Optional: password authentication
+
+  - name: "Development Server"
+    ip: "192.168.1.101"
+    user: "dev"
+    key_path: "~/.ssh/id_rsa"  # Optional: PEM key authentication
+
+  - name: "Staging Server"
+    ip: "10.0.0.50"
+    user: "deploy"
+    # No password or key_path - will use default SSH authentication
+
+  - name: "AWS EC2 Instance"
+    ip: "ec2-123-45-67-89.compute.amazonaws.com"
+    user: "ec2-user"
+    key_path: "~/.ssh/aws-key.pem"
