@@ -92,8 +92,17 @@ fi
 
 # Zsh completion 설치
 echo "📝 Installing zsh completion..."
-COMPLETION_DIR="/usr/local/share/zsh/site-functions"
-if [ -d "$COMPLETION_DIR" ] || mkdir -p "$COMPLETION_DIR" 2>/dev/null; then
+
+# Find writable zsh completion directory
+COMPLETION_DIR=""
+for dir in /opt/homebrew/share/zsh/site-functions /usr/local/share/zsh/site-functions /usr/share/zsh/site-functions; do
+    if [ -d "$dir" ] && [ -w "$dir" ]; then
+        COMPLETION_DIR="$dir"
+        break
+    fi
+done
+
+if [ -n "$COMPLETION_DIR" ]; then
     "$STOOL_DIR/stool" completion zsh > "$COMPLETION_DIR/_stool" 2>/dev/null
     if [ $? -eq 0 ]; then
         echo "✅ Zsh completion installed to $COMPLETION_DIR/_stool"
@@ -102,7 +111,8 @@ if [ -d "$COMPLETION_DIR" ] || mkdir -p "$COMPLETION_DIR" 2>/dev/null; then
         echo "⚠️  Failed to generate completion. Skipping..."
     fi
 else
-    echo "⚠️  Cannot create $COMPLETION_DIR. Skipping completion install..."
+    echo "⚠️  No writable zsh completion directory found. Skipping..."
+    echo "💡 Manually install: stool completion zsh > ~/.zsh/completions/_stool"
 fi
 
 # 설치 확인

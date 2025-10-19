@@ -63,11 +63,17 @@ The script will:
 - Build release binary with embedded config.yaml
 - Install to `~/Library/Stool/stool`
 - Create symlink at `/usr/local/bin/stool`
-- Install zsh completion
+- Auto-detect and install zsh completion (if writable)
 
 **Alternative: Specify config path**
 ```bash
 ./install.sh /path/to/my-config.yaml
+```
+
+**Note:** If zsh completion installation fails due to permissions, install manually:
+```bash
+stool completion zsh | sudo tee /opt/homebrew/share/zsh/site-functions/_stool
+source ~/.zshrc
 ```
 
 ### Manual Installation
@@ -174,8 +180,12 @@ stool ssh --config /path/to/other-config.yaml
 
 ### Zsh (Oh My Zsh)
 ```bash
-# Automatically installed by install.sh
-# Or manually:
+# Automatically installed by install.sh (if writable)
+# Or manually install to Homebrew path:
+stool completion zsh | sudo tee /opt/homebrew/share/zsh/site-functions/_stool
+source ~/.zshrc
+
+# Or system path:
 stool completion zsh | sudo tee /usr/local/share/zsh/site-functions/_stool
 source ~/.zshrc
 ```
