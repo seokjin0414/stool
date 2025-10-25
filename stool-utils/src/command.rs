@@ -1,5 +1,13 @@
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 use stool_core::error::{Result, StoolError, StoolErrorType};
+
+/// Check command exit status and return error if failed
+pub fn check_status(status: ExitStatus, error_type: StoolErrorType) -> Result<()> {
+    if !status.success() {
+        return Err(StoolError::new(error_type));
+    }
+    Ok(())
+}
 
 /// Execute SSH command with authentication
 pub fn execute_ssh(
@@ -17,9 +25,7 @@ pub fn execute_ssh(
             .status()
             .map_err(|e| StoolError::new(StoolErrorType::SshConnectionFailed).with_source(e))?;
 
-        if !status.success() {
-            return Err(StoolError::new(StoolErrorType::SshConnectionFailed));
-        }
+        check_status(status, StoolErrorType::SshConnectionFailed)?;
     } else if let Some(pass) = password {
         println!("Connecting with password authentication");
         execute_expect_ssh(user, ip, pass)?;
@@ -30,9 +36,7 @@ pub fn execute_ssh(
             .status()
             .map_err(|e| StoolError::new(StoolErrorType::SshConnectionFailed).with_source(e))?;
 
-        if !status.success() {
-            return Err(StoolError::new(StoolErrorType::SshConnectionFailed));
-        }
+        check_status(status, StoolErrorType::SshConnectionFailed)?;
     }
 
     Ok(())
@@ -55,9 +59,7 @@ pub fn execute_scp(
             .status()
             .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
 
-        if !status.success() {
-            return Err(StoolError::new(StoolErrorType::FileTransferFailed));
-        }
+        check_status(status, StoolErrorType::FileTransferFailed)?;
     } else if let Some(pass) = password {
         println!("Transferring with password authentication");
         execute_expect_scp(source, destination, pass)?;
@@ -69,9 +71,7 @@ pub fn execute_scp(
             .status()
             .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
 
-        if !status.success() {
-            return Err(StoolError::new(StoolErrorType::FileTransferFailed));
-        }
+        check_status(status, StoolErrorType::FileTransferFailed)?;
     }
 
     println!("Transfer completed successfully");
@@ -102,11 +102,7 @@ fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
         .status()
         .map_err(|e| StoolError::new(StoolErrorType::ExpectCommandFailed).with_source(e))?;
 
-    if !status.success() {
-        return Err(StoolError::new(StoolErrorType::SshConnectionFailed));
-    }
-
-    Ok(())
+    check_status(status, StoolErrorType::SshConnectionFailed)
 }
 
 fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result<()> {
@@ -133,9 +129,5 @@ fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result
         .status()
         .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
 
-    if !status.success() {
-        return Err(StoolError::new(StoolErrorType::FileTransferFailed));
-    }
-
-    Ok(())
+    check_status(status, StoolErrorType::FileTransferFailed)
 }
