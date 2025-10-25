@@ -107,7 +107,7 @@ fn search_recursive(
             let matches = if is_exact {
                 filename == pattern
             } else {
-                matches_glob(filename, pattern)
+                matches_glob(filename, pattern)?
             };
 
             if matches {
@@ -125,13 +125,17 @@ fn search_recursive(
 }
 
 // Simple glob matching (* and ?)
-fn matches_glob(text: &str, pattern: &str) -> bool {
+fn matches_glob(text: &str, pattern: &str) -> Result<bool> {
     let re_pattern = pattern
         .replace(".", "\\.")
         .replace("*", ".*")
         .replace("?", ".");
 
-    regex::Regex::new(&format!("^{}$", re_pattern))
-        .map(|re| re.is_match(text))
-        .unwrap_or(false)
+    let regex = regex::Regex::new(&format!("^{}$", re_pattern)).map_err(|e| {
+        StoolError::new(StoolErrorType::SearchPatternInvalid)
+            .with_message(format!("Invalid pattern: {}", pattern))
+            .with_source(e)
+    })?;
+
+    Ok(regex.is_match(text))
 }
