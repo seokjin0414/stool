@@ -2,21 +2,21 @@ use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::command;
 
 pub fn update_brew() -> Result<()> {
-    println!("Updating Homebrew...");
+    println!("Updating Homebrew");
 
     command::execute_command("brew", &["update"], StoolErrorType::BrewUpdateFailed)?;
     command::execute_command("brew", &["upgrade"], StoolErrorType::BrewUpdateFailed)?;
 
-    println!("Homebrew update completed");
+    println!("Homebrew updated successfully");
     Ok(())
 }
 
 pub fn update_rustup() -> Result<()> {
-    println!("Updating Rust toolchain...");
+    println!("Updating Rust toolchain");
 
     command::execute_command("rustup", &["update"], StoolErrorType::RustupUpdateFailed)?;
 
-    println!("Rust toolchain update completed");
+    println!("Rust toolchain updated successfully");
     Ok(())
 }
 

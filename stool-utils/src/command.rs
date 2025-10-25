@@ -33,7 +33,11 @@ pub fn execute_ssh(
             .arg(key)
             .arg(format!("{}@{}", user, ip))
             .status()
-            .map_err(|e| StoolError::new(StoolErrorType::SshConnectionFailed).with_source(e))?;
+            .map_err(|e| {
+                StoolError::new(StoolErrorType::SshConnectionFailed)
+                    .with_message(format!("Failed to execute ssh command to {}@{}", user, ip))
+                    .with_source(e)
+            })?;
 
         check_status(status, StoolErrorType::SshConnectionFailed)?;
     } else if let Some(pass) = password {
@@ -44,7 +48,11 @@ pub fn execute_ssh(
         let status = Command::new("ssh")
             .arg(format!("{}@{}", user, ip))
             .status()
-            .map_err(|e| StoolError::new(StoolErrorType::SshConnectionFailed).with_source(e))?;
+            .map_err(|e| {
+                StoolError::new(StoolErrorType::SshConnectionFailed)
+                    .with_message(format!("Failed to execute ssh command to {}@{}", user, ip))
+                    .with_source(e)
+            })?;
 
         check_status(status, StoolErrorType::SshConnectionFailed)?;
     }
@@ -67,7 +75,14 @@ pub fn execute_scp(
             .arg(source)
             .arg(destination)
             .status()
-            .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
+            .map_err(|e| {
+                StoolError::new(StoolErrorType::FileTransferFailed)
+                    .with_message(format!(
+                        "Failed to execute scp from {} to {}",
+                        source, destination
+                    ))
+                    .with_source(e)
+            })?;
 
         check_status(status, StoolErrorType::FileTransferFailed)?;
     } else if let Some(pass) = password {
@@ -79,7 +94,14 @@ pub fn execute_scp(
             .arg(source)
             .arg(destination)
             .status()
-            .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
+            .map_err(|e| {
+                StoolError::new(StoolErrorType::FileTransferFailed)
+                    .with_message(format!(
+                        "Failed to execute scp from {} to {}",
+                        source, destination
+                    ))
+                    .with_source(e)
+            })?;
 
         check_status(status, StoolErrorType::FileTransferFailed)?;
     }
@@ -110,7 +132,14 @@ fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
             pass = password
         ))
         .status()
-        .map_err(|e| StoolError::new(StoolErrorType::ExpectCommandFailed).with_source(e))?;
+        .map_err(|e| {
+            StoolError::new(StoolErrorType::ExpectCommandFailed)
+                .with_message(format!(
+                    "Failed to execute expect for ssh to {}@{}",
+                    user, ip
+                ))
+                .with_source(e)
+        })?;
 
     check_status(status, StoolErrorType::SshConnectionFailed)
 }
@@ -137,7 +166,14 @@ fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result
             pass = password
         ))
         .status()
-        .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
+        .map_err(|e| {
+            StoolError::new(StoolErrorType::FileTransferFailed)
+                .with_message(format!(
+                    "Failed to execute expect for scp from {} to {}",
+                    source, destination
+                ))
+                .with_source(e)
+        })?;
 
     check_status(status, StoolErrorType::FileTransferFailed)
 }
