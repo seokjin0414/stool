@@ -46,6 +46,7 @@ stool --help
 - Default paths: Upload(~/), Download(~/Downloads/)
 - External config file support
 - **Tab completion for local file paths**
+- **Empty input support for default paths**
 
 ### Shell Completion
 - Auto-completion for Zsh, Bash, Fish, PowerShell
@@ -153,9 +154,12 @@ stool transfer --config servers.yaml   # Use external config file
 ```
 
 **Features:**
-- Upload: Local file path supports tab completion
-- Download: Local destination path supports tab completion
-- Remote paths: Text input (no completion)
+- Upload:
+  - Local file path supports tab completion (required)
+  - Remote path accepts empty input for default (~/)
+- Download:
+  - Remote file path is required
+  - Local destination path supports tab completion, empty input for default (~/Downloads/)
 
 ### Shell Completion
 ```bash
@@ -241,7 +245,7 @@ stool/
 │   ├── filesystem.rs  # File search and count operations
 │   └── transfer.rs    # SCP file transfer (upload/download)
 └── stool-utils/       # Shared utilities
-    ├── interactive.rs # Server selection, text/path input with tab completion
+    ├── interactive.rs # Server selection, text/path input (tab completion, optional)
     └── command.rs     # SSH/SCP/command execution helpers
 ```
 
