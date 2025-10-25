@@ -12,9 +12,9 @@ pub enum TransferMode {
 pub fn transfer(servers: &[Server]) -> Result<()> {
     // Select transfer mode
     let mode_items: Vec<String> = vec![
-        "Upload (local -> remote)".to_string(),
-        "Download (remote -> local)".to_string(),
-        "Cancel".to_string(),
+        "1. Upload (local -> remote)".to_string(),
+        "2. Download (remote -> local)".to_string(),
+        "3. Cancel".to_string(),
     ];
     let mode_selection = interactive::select_from_list("Transfer mode:", &mode_items)?;
     let mode = match mode_selection {
