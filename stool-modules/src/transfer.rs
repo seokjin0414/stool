@@ -1,7 +1,6 @@
-use std::process::Command;
 use stool_core::config::Server;
 use stool_core::error::{Result, StoolError, StoolErrorType};
-use stool_utils::interactive;
+use stool_utils::{command, interactive};
 
 #[derive(Debug)]
 pub enum TransferMode {
@@ -25,33 +24,11 @@ pub fn transfer(servers: &[Server]) -> Result<()> {
     };
 
     // Select server or manual input
-    let mut server_items: Vec<String> = servers
-        .iter()
-        .enumerate()
-        .map(|(i, s)| format!("{}. {} ({}@{})", i + 1, s.name, s.user, s.ip))
-        .collect();
-    server_items.push("Manual input".to_string());
-    server_items.push("Cancel".to_string());
+    let server_info = interactive::select_server(servers)?;
 
-    let selection = interactive::select_from_list("Select server:", &server_items)?;
-
-    if selection == server_items.len() - 1 {
-        return Ok(());
-    }
-
-    let (user, ip, key_path, password) = if selection < servers.len() {
-        let server = &servers[selection];
-        (
-            server.user.clone(),
-            server.ip.clone(),
-            server.key_path.clone(),
-            server.password.clone(),
-        )
-    } else {
-        // Manual input
-        let user_input = interactive::input_text("Enter username:")?;
-        let ip_input = interactive::input_text("Enter IP address:")?;
-        (user_input, ip_input, None, None)
+    let (user, ip, key_path, password) = match server_info {
+        Some(info) => info,
+        None => return Ok(()), // User cancelled
     };
 
     match mode {
@@ -80,7 +57,7 @@ fn execute_upload(
         remote_path_input
     };
 
-    execute_scp(
+    command::execute_scp(
         &local_path,
         &format!("{}@{}:{}", user, ip, remote_path),
         key_path,
@@ -102,74 +79,10 @@ fn execute_download(
         local_path_input
     };
 
-    execute_scp(
+    command::execute_scp(
         &format!("{}@{}:{}", user, ip, remote_path),
         &local_path,
         key_path,
         password,
     )
-}
-
-fn execute_scp(
-    source: &str,
-    destination: &str,
-    key_path: Option<&str>,
-    password: Option<&str>,
-) -> Result<()> {
-    if let Some(key) = key_path {
-        println!("Using key authentication");
-        let status = Command::new("scp")
-            .arg("-i")
-            .arg(key)
-            .arg(source)
-            .arg(destination)
-            .status()
-            .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
-
-        if !status.success() {
-            return Err(StoolError::new(StoolErrorType::FileTransferFailed));
-        }
-    } else if let Some(pass) = password {
-        println!("Using password authentication");
-        let status = Command::new("expect")
-            .arg("-c")
-            .arg(format!(
-                r#"
-                spawn scp {source} {destination}
-                expect {{
-                    "yes/no" {{
-                        send "yes\r"
-                        exp_continue
-                    }}
-                    "password:" {{
-                        send "{pass}\r"
-                    }}
-                }}
-                expect eof
-                "#,
-                source = source,
-                destination = destination,
-                pass = pass
-            ))
-            .status()
-            .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
-
-        if !status.success() {
-            return Err(StoolError::new(StoolErrorType::FileTransferFailed));
-        }
-    } else {
-        println!("Using default authentication");
-        let status = Command::new("scp")
-            .arg(source)
-            .arg(destination)
-            .status()
-            .map_err(|e| StoolError::new(StoolErrorType::FileTransferFailed).with_source(e))?;
-
-        if !status.success() {
-            return Err(StoolError::new(StoolErrorType::FileTransferFailed));
-        }
-    }
-
-    println!("Transfer completed successfully");
-    Ok(())
 }
