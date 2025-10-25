@@ -14,12 +14,12 @@ authors = ["seokjin0414 <sars21@hanmail.net>"]
 license = "MIT"
 
 [workspace.dependencies]
-clap = { version = "4.5", features = ["derive"] }
-clap_complete = "4.5"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
+clap = { version = "4.5.50", features = ["derive"] }
+clap_complete = "4.5.59"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_yaml = "0.9.33"
 dialoguer = "0.12.0"
-rustyline = "14.0"
+rustyline = "17.0.2"
 
 [profile.release]
 opt-level = 3
