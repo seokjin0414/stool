@@ -15,7 +15,7 @@ pub fn connect(servers: &[Server]) -> Result<()> {
     let selection = interactive::select_from_list("Select server:", &items)?;
 
     if selection == items.len() - 1 {
-        return Err(StoolError::new(StoolErrorType::Cancelled));
+        return Ok(());
     }
 
     let (user, ip, key_path, password) = if selection < servers.len() {

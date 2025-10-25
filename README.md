@@ -18,6 +18,7 @@ stool --help
 ### SSH Connection
 - Interactive server selection menu
 - Manual IP input option
+- Cancel option (silent exit)
 - Multiple authentication methods:
   - PEM key authentication
   - Password authentication (with expect)
@@ -40,6 +41,7 @@ stool --help
 - SCP-based file transfer
 - Upload/Download support
 - Server selection from config or manual IP input
+- Cancel option (silent exit)
 - Same authentication methods as SSH
 - Default paths: Upload(~/), Download(~/Downloads/)
 - External config file support

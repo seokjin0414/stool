@@ -20,7 +20,7 @@ pub fn transfer(servers: &[Server]) -> Result<()> {
     let mode = match mode_selection {
         0 => TransferMode::Upload,
         1 => TransferMode::Download,
-        2 => return Err(StoolError::new(StoolErrorType::Cancelled)),
+        2 => return Ok(()),
         _ => return Err(StoolError::new(StoolErrorType::InvalidInput)),
     };
 
@@ -36,7 +36,7 @@ pub fn transfer(servers: &[Server]) -> Result<()> {
     let selection = interactive::select_from_list("Select server:", &server_items)?;
 
     if selection == server_items.len() - 1 {
-        return Err(StoolError::new(StoolErrorType::Cancelled));
+        return Ok(());
     }
 
     let (user, ip, key_path, password) = if selection < servers.len() {
