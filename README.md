@@ -226,12 +226,24 @@ stool completion fish > ~/.config/fish/completions/stool.fish
 ```
 stool/
 ├── stool-cli/         # Binary crate (CLI interface)
-├── stool-core/        # Core types and config
+├── stool-core/        # Core types, config, and error handling
+│   ├── config.rs      # YAML config loading (embedded/external)
+│   └── error.rs       # Unified error types and Result alias
 ├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer)
-└── stool-utils/       # Utilities (interactive UI, command execution)
-   ├── interactive.rs  # Server selection, user input
-   └── command.rs      # SSH/SCP execution with authentication
+│   ├── ssh.rs         # SSH connection with server selection
+│   ├── update.rs      # System updates (brew, rustup)
+│   ├── filesystem.rs  # File search and count operations
+│   └── transfer.rs    # SCP file transfer (upload/download)
+└── stool-utils/       # Shared utilities
+    ├── interactive.rs # Common server selection and user input
+    └── command.rs     # SSH/SCP/command execution helpers
 ```
+
+**Architecture Highlights:**
+- Modular workspace structure with clear separation of concerns
+- Unified error handling across all modules
+- Shared utilities eliminate code duplication
+- Optimized for binary size and performance
 
 ## Security Notes
 
@@ -242,6 +254,13 @@ stool/
 - Use external config files for sensitive environments
 
 ## Development
+
+### Code Quality Standards
+- **Error Handling**: All errors use unified `StoolErrorType` enum
+- **No Panics**: `unwrap()` is prohibited; use `?` operator or `map_err()`
+- **Code Reuse**: Common logic extracted to utility functions
+- **Consistent Messages**: Standardized success/progress/error messages
+- **Performance**: Optimized with LTO, single codegen unit, and stripped symbols
 
 ### Check Code
 ```bash
