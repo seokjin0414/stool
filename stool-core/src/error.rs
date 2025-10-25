@@ -41,6 +41,7 @@ pub enum StoolErrorType {
     InvalidInput,
     PermissionDenied,
     IoError,
+    Cancelled,
 }
 
 impl fmt::Display for StoolErrorType {
@@ -76,6 +77,7 @@ impl fmt::Display for StoolErrorType {
             Self::InvalidInput => write!(f, "잘못된 입력"),
             Self::PermissionDenied => write!(f, "권한 거부"),
             Self::IoError => write!(f, "I/O 오류"),
+            Self::Cancelled => write!(f, "작업 취소됨"),
         }
     }
 }

@@ -10,8 +10,13 @@ pub fn connect(servers: &[Server]) -> Result<()> {
         .map(|(i, s)| format!("{}. {} ({}@{})", i + 1, s.name, s.user, s.ip))
         .collect();
     items.push("Manual input".to_string());
+    items.push("Cancel".to_string());
 
     let selection = interactive::select_from_list("Select server:", &items)?;
+
+    if selection == items.len() - 1 {
+        return Err(StoolError::new(StoolErrorType::Cancelled));
+    }
 
     let (user, ip, key_path, password) = if selection < servers.len() {
         let server = &servers[selection];

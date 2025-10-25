@@ -14,11 +14,13 @@ pub fn transfer(servers: &[Server]) -> Result<()> {
     let mode_items: Vec<String> = vec![
         "Upload (local -> remote)".to_string(),
         "Download (remote -> local)".to_string(),
+        "Cancel".to_string(),
     ];
     let mode_selection = interactive::select_from_list("Transfer mode:", &mode_items)?;
     let mode = match mode_selection {
         0 => TransferMode::Upload,
         1 => TransferMode::Download,
+        2 => return Err(StoolError::new(StoolErrorType::Cancelled)),
         _ => return Err(StoolError::new(StoolErrorType::InvalidInput)),
     };
 
@@ -29,8 +31,13 @@ pub fn transfer(servers: &[Server]) -> Result<()> {
         .map(|(i, s)| format!("{}. {} ({}@{})", i + 1, s.name, s.user, s.ip))
         .collect();
     server_items.push("Manual input".to_string());
+    server_items.push("Cancel".to_string());
 
     let selection = interactive::select_from_list("Select server:", &server_items)?;
+
+    if selection == server_items.len() - 1 {
+        return Err(StoolError::new(StoolErrorType::Cancelled));
+    }
 
     let (user, ip, key_path, password) = if selection < servers.len() {
         let server = &servers[selection];
