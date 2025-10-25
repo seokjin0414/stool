@@ -241,9 +241,11 @@ stool/
 
 **Architecture Highlights:**
 - Modular workspace structure with clear separation of concerns
-- Unified error handling across all modules
-- Shared utilities eliminate code duplication
-- Optimized for binary size and performance
+- Unified error handling across all modules (25 error types)
+- Shared utilities eliminate code duplication (91 lines reduced)
+- Optimized for binary size and performance (LTO, strip, single codegen)
+- Comprehensive documentation (25 public functions documented)
+- Named constants throughout (no magic strings)
 
 ## Security Notes
 
@@ -256,11 +258,35 @@ stool/
 ## Development
 
 ### Code Quality Standards
-- **Error Handling**: All errors use unified `StoolErrorType` enum
-- **No Panics**: `unwrap()` is prohibited; use `?` operator or `map_err()`
-- **Code Reuse**: Common logic extracted to utility functions
-- **Consistent Messages**: Standardized success/progress/error messages
-- **Performance**: Optimized with LTO, single codegen unit, and stripped symbols
+
+**Error Handling:**
+- All errors use unified `StoolErrorType` enum (25 variants)
+- `unwrap()` is completely prohibited; use `?` operator or `map_err()`
+- Error messages include contextual information (user@ip, paths, etc.)
+- Error chaining with `with_message()` and `with_source()`
+
+**Code Organization:**
+- Common logic extracted to utility functions
+- No code duplication (91 lines eliminated via helpers)
+- Named constants for all hardcoded values
+- Single responsibility per function
+
+**Documentation:**
+- Module-level docs (`//!`) on every module file
+- Doc comments (`///`) on all public functions
+- Arguments, Returns, and Errors sections included
+- 25 public functions fully documented
+
+**Message Formatting:**
+- Success: "Action completed successfully" pattern
+- Progress: No ellipsis, clear statements
+- Errors: Detailed context with relevant information
+
+**Performance:**
+- LTO (Link Time Optimization) enabled
+- Single codegen unit compilation
+- Symbol stripping for smaller binaries
+- Panic abort mode
 
 ### Check Code
 ```bash
