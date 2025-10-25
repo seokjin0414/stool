@@ -4,8 +4,16 @@
 //! - Server selection menus
 //! - Text input prompts
 //! - List selection dialogs
+//! - File path input with tab completion
 
 use dialoguer::{theme::ColorfulTheme, Input, Select};
+use rustyline::completion::{Completer, FilenameCompleter, Pair};
+use rustyline::error::ReadlineError;
+use rustyline::highlight::Highlighter;
+use rustyline::hint::Hinter;
+use rustyline::validate::Validator;
+use rustyline::{Config, Editor};
+use rustyline::{Context, Helper};
 use stool_core::config::Server;
 use stool_core::error::{Result, StoolError, StoolErrorType};
 
@@ -17,6 +25,32 @@ pub const MENU_CANCEL: &str = "Cancel";
 
 /// Server information tuple: (user, ip, key_path, password).
 pub type ServerInfo = (String, String, Option<String>, Option<String>);
+
+/// Helper for rustyline with file path completion support.
+struct PathHelper(FilenameCompleter);
+
+impl Helper for PathHelper {}
+
+impl Completer for PathHelper {
+    type Candidate = Pair;
+
+    fn complete(
+        &self,
+        line: &str,
+        pos: usize,
+        ctx: &Context<'_>,
+    ) -> rustyline::Result<(usize, Vec<Pair>)> {
+        self.0.complete(line, pos, ctx)
+    }
+}
+
+impl Hinter for PathHelper {
+    type Hint = String;
+}
+
+impl Highlighter for PathHelper {}
+
+impl Validator for PathHelper {}
 
 /// Displays an interactive selection menu.
 ///
@@ -53,6 +87,38 @@ pub fn input_text(prompt: &str) -> Result<String> {
         .with_prompt(prompt)
         .interact_text()
         .map_err(|e| StoolError::new(StoolErrorType::InvalidInput).with_source(e))
+}
+
+/// Prompts user for file path input with tab completion.
+///
+/// Provides interactive file path input with:
+/// - Tab key for file/directory completion
+/// - Support for relative and absolute paths
+/// - Tilde expansion for home directory
+///
+/// # Arguments
+/// * `prompt` - Message displayed before input field
+///
+/// # Returns
+/// User-entered file path string
+///
+/// # Errors
+/// Returns error if user interaction fails or input is cancelled
+pub fn input_path(prompt: &str) -> Result<String> {
+    let config = Config::builder().auto_add_history(true).build();
+    let helper = PathHelper(FilenameCompleter::new());
+    let mut editor = Editor::with_config(config)
+        .map_err(|e| StoolError::new(StoolErrorType::InvalidInput).with_source(e))?;
+    editor.set_helper(Some(helper));
+
+    let readline = editor.readline(&format!("{} ", prompt));
+    match readline {
+        Ok(line) => Ok(line.trim().to_string()),
+        Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
+            Err(StoolError::new(StoolErrorType::Cancelled))
+        }
+        Err(e) => Err(StoolError::new(StoolErrorType::InvalidInput).with_source(e)),
+    }
 }
 
 /// Presents server selection menu with cancel option.

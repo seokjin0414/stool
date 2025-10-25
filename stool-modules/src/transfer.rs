@@ -77,7 +77,7 @@ fn execute_upload(
     key_path: Option<&str>,
     password: Option<&str>,
 ) -> Result<()> {
-    let local_path = interactive::input_text("Local file path:")?;
+    let local_path = interactive::input_path("Local file path:")?;
     let remote_path_input =
         interactive::input_text(&format!("Remote path (default: {}): ", DEFAULT_REMOTE_PATH))?;
     let remote_path = if remote_path_input.trim().is_empty() {
@@ -102,7 +102,7 @@ fn execute_download(
 ) -> Result<()> {
     let remote_path = interactive::input_text("Remote file path:")?;
     let local_path_input =
-        interactive::input_text(&format!("Local path (default: {}): ", DEFAULT_LOCAL_PATH))?;
+        interactive::input_path(&format!("Local path (default: {}): ", DEFAULT_LOCAL_PATH))?;
     let local_path = if local_path_input.trim().is_empty() {
         DEFAULT_LOCAL_PATH.to_string()
     } else {

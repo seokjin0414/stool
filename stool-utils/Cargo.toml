@@ -8,3 +8,4 @@ license.workspace = true
 [dependencies]
 stool-core = { path = "../stool-core" }
 dialoguer = { workspace = true }
+rustyline = { workspace = true }
