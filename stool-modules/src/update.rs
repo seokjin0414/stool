@@ -1,23 +1,11 @@
-use std::process::Command;
 use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::command;
 
 pub fn update_brew() -> Result<()> {
     println!("Updating Homebrew...");
 
-    let status = Command::new("brew")
-        .arg("update")
-        .status()
-        .map_err(|e| StoolError::new(StoolErrorType::BrewUpdateFailed).with_source(e))?;
-
-    command::check_status(status, StoolErrorType::BrewUpdateFailed)?;
-
-    let status = Command::new("brew")
-        .arg("upgrade")
-        .status()
-        .map_err(|e| StoolError::new(StoolErrorType::BrewUpdateFailed).with_source(e))?;
-
-    command::check_status(status, StoolErrorType::BrewUpdateFailed)?;
+    command::execute_command("brew", &["update"], StoolErrorType::BrewUpdateFailed)?;
+    command::execute_command("brew", &["upgrade"], StoolErrorType::BrewUpdateFailed)?;
 
     println!("Homebrew update completed");
     Ok(())
@@ -26,12 +14,7 @@ pub fn update_brew() -> Result<()> {
 pub fn update_rustup() -> Result<()> {
     println!("Updating Rust toolchain...");
 
-    let status = Command::new("rustup")
-        .arg("update")
-        .status()
-        .map_err(|e| StoolError::new(StoolErrorType::RustupUpdateFailed).with_source(e))?;
-
-    command::check_status(status, StoolErrorType::RustupUpdateFailed)?;
+    command::execute_command("rustup", &["update"], StoolErrorType::RustupUpdateFailed)?;
 
     println!("Rust toolchain update completed");
     Ok(())

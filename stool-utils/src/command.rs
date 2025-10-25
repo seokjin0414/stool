@@ -9,6 +9,16 @@ pub fn check_status(status: ExitStatus, error_type: StoolErrorType) -> Result<()
     Ok(())
 }
 
+/// Execute a command with arguments and check status
+pub fn execute_command(program: &str, args: &[&str], error_type: StoolErrorType) -> Result<()> {
+    let status = Command::new(program)
+        .args(args)
+        .status()
+        .map_err(|e| StoolError::new(error_type).with_source(e))?;
+
+    check_status(status, error_type)
+}
+
 /// Execute SSH command with authentication
 pub fn execute_ssh(
     user: &str,

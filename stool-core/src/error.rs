@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StoolErrorType {
     // SSH related
     SshConnectionFailed,
