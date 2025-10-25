@@ -89,6 +89,24 @@ pub fn input_text(prompt: &str) -> Result<String> {
         .map_err(|e| StoolError::new(StoolErrorType::InvalidInput).with_source(e))
 }
 
+/// Prompts user for text input with empty value allowed.
+///
+/// # Arguments
+/// * `prompt` - Message displayed before input field
+///
+/// # Returns
+/// User-entered text string (may be empty)
+///
+/// # Errors
+/// Returns error if user interaction fails
+pub fn input_text_optional(prompt: &str) -> Result<String> {
+    Input::with_theme(&ColorfulTheme::default())
+        .with_prompt(prompt)
+        .allow_empty(true)
+        .interact_text()
+        .map_err(|e| StoolError::new(StoolErrorType::InvalidInput).with_source(e))
+}
+
 /// Prompts user for file path input with tab completion.
 ///
 /// Provides interactive file path input with:
