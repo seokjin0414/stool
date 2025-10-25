@@ -7,6 +7,9 @@
 use std::fs;
 use std::path::Path;
 use stool_core::error::{Result, StoolError, StoolErrorType};
+
+/// Default search path when no path is specified.
+const DEFAULT_SEARCH_PATH: &str = ".";
 /// Finds files matching the given pattern.
 ///
 /// Supports three pattern types:
@@ -23,7 +26,7 @@ use stool_core::error::{Result, StoolError, StoolErrorType};
 /// # Errors
 /// Returns error if path doesn't exist or pattern is invalid
 pub fn find(pattern: &str, path: Option<&str>) -> Result<()> {
-    let search_path = path.unwrap_or(".");
+    let search_path = path.unwrap_or(DEFAULT_SEARCH_PATH);
     let search_dir = Path::new(search_path);
 
     if !search_dir.exists() {
@@ -70,7 +73,7 @@ pub fn find(pattern: &str, path: Option<&str>) -> Result<()> {
 /// # Errors
 /// Returns error if path doesn't exist or is not a directory
 pub fn count(path: Option<&str>) -> Result<()> {
-    let target_path = path.unwrap_or(".");
+    let target_path = path.unwrap_or(DEFAULT_SEARCH_PATH);
     let dir = Path::new(target_path);
 
     if !dir.exists() {

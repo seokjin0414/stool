@@ -9,6 +9,12 @@ use stool_core::config::Server;
 use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::{command, interactive};
 
+/// Default remote path for upload operations.
+const DEFAULT_REMOTE_PATH: &str = "~/";
+
+/// Default local path for download operations.
+const DEFAULT_LOCAL_PATH: &str = "~/Downloads/";
+
 /// Transfer mode selection.
 #[derive(Debug)]
 pub enum TransferMode {
@@ -72,9 +78,10 @@ fn execute_upload(
     password: Option<&str>,
 ) -> Result<()> {
     let local_path = interactive::input_text("Local file path:")?;
-    let remote_path_input = interactive::input_text("Remote path (default: ~/): ")?;
+    let remote_path_input =
+        interactive::input_text(&format!("Remote path (default: {}): ", DEFAULT_REMOTE_PATH))?;
     let remote_path = if remote_path_input.trim().is_empty() {
-        "~/".to_string()
+        DEFAULT_REMOTE_PATH.to_string()
     } else {
         remote_path_input
     };
@@ -94,9 +101,10 @@ fn execute_download(
     password: Option<&str>,
 ) -> Result<()> {
     let remote_path = interactive::input_text("Remote file path:")?;
-    let local_path_input = interactive::input_text("Local path (default: ~/Downloads/): ")?;
+    let local_path_input =
+        interactive::input_text(&format!("Local path (default: {}): ", DEFAULT_LOCAL_PATH))?;
     let local_path = if local_path_input.trim().is_empty() {
-        "~/Downloads/".to_string()
+        DEFAULT_LOCAL_PATH.to_string()
     } else {
         local_path_input
     };
