@@ -3,7 +3,7 @@ use clap_complete::{generate, Shell};
 use std::io;
 use stool_core::config::Config;
 use stool_core::error::Result;
-use stool_modules::{filesystem, ssh, update};
+use stool_modules::{filesystem, ssh, transfer, update};
 
 #[derive(Parser)]
 #[command(name = "stool")]
@@ -42,6 +42,15 @@ enum Commands {
     Filesystem {
         #[command(subcommand)]
         command: FilesystemCommands,
+    },
+    #[command(short_flag = 't', about = "File transfer (scp)")]
+    Transfer {
+        #[arg(
+            short,
+            long,
+            help = "External config file (default: embedded config.yaml)"
+        )]
+        config: Option<String>,
     },
     #[command(about = "Generate shell completion script")]
     Completion {
@@ -91,6 +100,14 @@ fn main() -> Result<()> {
                 filesystem::count(path.as_deref())?;
             }
         },
+        Some(Commands::Transfer { config }) => {
+            let cfg = if let Some(path) = config {
+                Config::load(&path)?
+            } else {
+                Config::load_embedded()?
+            };
+            transfer::transfer(&cfg.servers)?;
+        }
         Some(Commands::Completion { shell }) => {
             let mut cmd = Cli::command();
             generate(shell, &mut cmd, "stool", &mut io::stdout());

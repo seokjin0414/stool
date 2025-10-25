@@ -17,6 +17,7 @@ stool --help
 
 ### SSH Connection
 - Interactive server selection menu
+- Manual IP input option
 - Multiple authentication methods:
   - PEM key authentication
   - Password authentication (with expect)
@@ -34,6 +35,14 @@ stool --help
 ### Filesystem Operations
 - Find files by pattern (exact, glob, or partial match)
 - Count files and directories
+
+### File Transfer
+- SCP-based file transfer
+- Upload/Download support
+- Server selection from config or manual IP input
+- Same authentication methods as SSH
+- Default paths: Upload(~/), Download(~/Downloads/)
+- External config file support
 
 ### Shell Completion
 - Auto-completion for Zsh, Bash, Fish, PowerShell
@@ -133,6 +142,13 @@ stool -f count                    # Count in current directory
 stool -f count ./src              # Count in specific path
 ```
 
+### File Transfer
+```bash
+stool transfer                         # Use embedded config.yaml
+stool -t                               # Short flag
+stool transfer --config servers.yaml   # Use external config file
+```
+
 ### Shell Completion
 ```bash
 stool completion zsh              # Generate zsh completion
@@ -209,7 +225,7 @@ stool completion fish > ~/.config/fish/completions/stool.fish
 stool/
 ├── stool-cli/         # Binary crate (CLI interface)
 ├── stool-core/        # Core types and config
-├── stool-modules/     # Feature modules (ssh, update, filesystem)
+├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer)
 └── stool-utils/       # Utilities (interactive UI)
 ```
 

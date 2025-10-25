@@ -4,30 +4,45 @@ use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::interactive;
 
 pub fn connect(servers: &[Server]) -> Result<()> {
-    let items: Vec<String> = servers
+    let mut items: Vec<String> = servers
         .iter()
         .enumerate()
         .map(|(i, s)| format!("{}. {} ({}@{})", i + 1, s.name, s.user, s.ip))
         .collect();
+    items.push("Manual input".to_string());
 
-    let selection = interactive::select_from_list("서버를 선택하세요", &items)?;
-    let server = &servers[selection];
+    let selection = interactive::select_from_list("Select server:", &items)?;
 
-    println!("선택된 서버: {} ({})", server.name, server.ip);
+    let (user, ip, key_path, password) = if selection < servers.len() {
+        let server = &servers[selection];
+        println!("선택된 서버: {} ({})", server.name, server.ip);
+        (
+            server.user.clone(),
+            server.ip.clone(),
+            server.key_path.clone(),
+            server.password.clone(),
+        )
+    } else {
+        // Manual input
+        let user_input = interactive::input_text("Enter username:")?;
+        let ip_input = interactive::input_text("Enter IP address:")?;
+        println!("연결: {}@{}", user_input, ip_input);
+        (user_input, ip_input, None, None)
+    };
 
-    if let Some(key) = &server.key_path {
+    if let Some(key) = &key_path {
         println!("PEM key로 접속");
         let status = Command::new("ssh")
             .arg("-i")
             .arg(key)
-            .arg(format!("{}@{}", server.user, server.ip))
+            .arg(format!("{}@{}", user, ip))
             .status()
             .map_err(|e| StoolError::new(StoolErrorType::SshConnectionFailed).with_source(e))?;
 
         if !status.success() {
             return Err(StoolError::new(StoolErrorType::SshConnectionFailed));
         }
-    } else if let Some(pass) = &server.password {
+    } else if let Some(pass) = &password {
         println!("PW init...");
         let status = Command::new("expect")
             .arg("-c")
@@ -45,8 +60,8 @@ pub fn connect(servers: &[Server]) -> Result<()> {
                 }}
                 interact
                 "#,
-                user = server.user,
-                ip = server.ip,
+                user = user,
+                ip = ip,
                 pass = pass
             ))
             .status()
@@ -58,7 +73,7 @@ pub fn connect(servers: &[Server]) -> Result<()> {
     } else {
         println!("바로 접속");
         let status = Command::new("ssh")
-            .arg(format!("{}@{}", server.user, server.ip))
+            .arg(format!("{}@{}", user, ip))
             .status()
             .map_err(|e| StoolError::new(StoolErrorType::SshConnectionFailed).with_source(e))?;
 
