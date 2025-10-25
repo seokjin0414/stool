@@ -228,7 +228,9 @@ stool/
 ├── stool-cli/         # Binary crate (CLI interface)
 ├── stool-core/        # Core types and config
 ├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer)
-└── stool-utils/       # Utilities (interactive UI)
+└── stool-utils/       # Utilities (interactive UI, command execution)
+   ├── interactive.rs  # Server selection, user input
+   └── command.rs      # SSH/SCP execution with authentication
 ```
 
 ## Security Notes
