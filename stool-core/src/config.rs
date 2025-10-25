@@ -1,7 +1,16 @@
+//! Configuration management for server connections.
+//!
+//! This module handles loading and parsing YAML configuration files
+//! containing server connection details (SSH, SCP).
+
 use crate::error::{Result, StoolError, StoolErrorType};
 use serde::{Deserialize, Serialize};
 use std::fs;
 
+/// Server connection configuration.
+///
+/// Represents a single server with authentication details.
+/// Supports multiple authentication methods via optional fields.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Server {
     pub name: String,
@@ -11,12 +20,20 @@ pub struct Server {
     pub key_path: Option<String>,
 }
 
+/// Configuration container for server list.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub servers: Vec<Server>,
 }
 
 impl Config {
+    /// Loads configuration from an external YAML file.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the YAML configuration file
+    ///
+    /// # Errors
+    /// Returns error if file cannot be read or parsed as YAML
     pub fn load(path: &str) -> Result<Self> {
         let content = fs::read_to_string(path).map_err(|e| {
             StoolError::new(StoolErrorType::ConfigLoadFailed)
@@ -31,6 +48,12 @@ impl Config {
         })
     }
 
+    /// Loads configuration embedded at build time.
+    ///
+    /// Uses config.yaml from project root, embedded via `include_str!`.
+    ///
+    /// # Errors
+    /// Returns error if embedded YAML cannot be parsed
     pub fn load_embedded() -> Result<Self> {
         let content = include_str!("../../config.yaml");
         serde_yaml::from_str(content).map_err(|e| {

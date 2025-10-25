@@ -1,11 +1,27 @@
+//! Filesystem operations module.
+//!
+//! Provides file search and directory counting functionality:
+//! - Find files by exact name, glob pattern, or partial match
+//! - Count files and directories in a path
+
 use std::fs;
 use std::path::Path;
 use stool_core::error::{Result, StoolError, StoolErrorType};
-
-/// Find files matching the pattern
-/// - Exact match: "file.txt"
-/// - Pattern: "*.rs"
-/// - Partial: "partial" (matches "*partial*")
+/// Finds files matching the given pattern.
+///
+/// Supports three pattern types:
+/// - Exact match: `"file.txt"` (files with extension)
+/// - Glob pattern: `"*.rs"` (contains `*` or `?`)
+/// - Partial match: `"partial"` (wrapped as `*partial*`)
+///
+/// Searches recursively, skipping hidden directories.
+///
+/// # Arguments
+/// * `pattern` - Search pattern (exact name, glob, or partial match)
+/// * `path` - Optional search directory (defaults to current directory)
+///
+/// # Errors
+/// Returns error if path doesn't exist or pattern is invalid
 pub fn find(pattern: &str, path: Option<&str>) -> Result<()> {
     let search_path = path.unwrap_or(".");
     let search_dir = Path::new(search_path);
@@ -44,7 +60,15 @@ pub fn find(pattern: &str, path: Option<&str>) -> Result<()> {
     Ok(())
 }
 
-/// Count files and directories in the given path
+/// Counts files and directories in the given path.
+///
+/// Performs a non-recursive count of immediate children in the directory.
+///
+/// # Arguments
+/// * `path` - Optional target directory (defaults to current directory)
+///
+/// # Errors
+/// Returns error if path doesn't exist or is not a directory
 pub fn count(path: Option<&str>) -> Result<()> {
     let target_path = path.unwrap_or(".");
     let dir = Path::new(target_path);

@@ -1,7 +1,21 @@
+//! Command execution utilities.
+//!
+//! Provides helpers for executing external commands:
+//! - SSH connection with multiple authentication methods
+//! - SCP file transfer with authentication
+//! - Generic command execution with status checking
+
 use std::process::{Command, ExitStatus};
 use stool_core::error::{Result, StoolError, StoolErrorType};
 
-/// Check command exit status and return error if failed
+/// Checks command exit status and returns error if failed.
+///
+/// # Arguments
+/// * `status` - Exit status from command execution
+/// * `error_type` - Error type to return on failure
+///
+/// # Errors
+/// Returns specified error type if status indicates failure
 pub fn check_status(status: ExitStatus, error_type: StoolErrorType) -> Result<()> {
     if !status.success() {
         return Err(StoolError::new(error_type));
@@ -9,7 +23,17 @@ pub fn check_status(status: ExitStatus, error_type: StoolErrorType) -> Result<()
     Ok(())
 }
 
-/// Execute a command with arguments and check status
+/// Executes a command with arguments and verifies success.
+///
+/// Runs command with inherited stdio for real-time output.
+///
+/// # Arguments
+/// * `program` - Command name or path to execute
+/// * `args` - Command-line arguments
+/// * `error_type` - Error type to return on failure
+///
+/// # Errors
+/// Returns specified error type if command fails to execute or exits with error
 pub fn execute_command(program: &str, args: &[&str], error_type: StoolErrorType) -> Result<()> {
     let status = Command::new(program)
         .args(args)
@@ -19,7 +43,21 @@ pub fn execute_command(program: &str, args: &[&str], error_type: StoolErrorType)
     check_status(status, error_type)
 }
 
-/// Execute SSH command with authentication
+/// Executes SSH connection with appropriate authentication.
+///
+/// Authentication priority:
+/// 1. PEM key (`key_path`) - Uses `ssh -i`
+/// 2. Password (`password`) - Uses expect script
+/// 3. Default - Standard SSH connection
+///
+/// # Arguments
+/// * `user` - Remote username
+/// * `ip` - Remote server IP address
+/// * `key_path` - Optional path to PEM key file
+/// * `password` - Optional password for authentication
+///
+/// # Errors
+/// Returns error if SSH connection fails or authentication is rejected
 pub fn execute_ssh(
     user: &str,
     ip: &str,
@@ -60,7 +98,21 @@ pub fn execute_ssh(
     Ok(())
 }
 
-/// Execute SCP command with authentication
+/// Executes SCP file transfer with appropriate authentication.
+///
+/// Authentication priority:
+/// 1. PEM key (`key_path`) - Uses `scp -i`
+/// 2. Password (`password`) - Uses expect script
+/// 3. Default - Standard SCP connection
+///
+/// # Arguments
+/// * `source` - Source file path (local or remote format: `user@ip:path`)
+/// * `destination` - Destination path (local or remote format: `user@ip:path`)
+/// * `key_path` - Optional path to PEM key file
+/// * `password` - Optional password for authentication
+///
+/// # Errors
+/// Returns error if file transfer fails or authentication is rejected
 pub fn execute_scp(
     source: &str,
     destination: &str,

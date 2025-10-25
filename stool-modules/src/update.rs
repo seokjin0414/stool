@@ -1,6 +1,18 @@
+//! System update module.
+//!
+//! Provides commands to update system components:
+//! - Homebrew packages
+//! - Rust toolchain via rustup
+
 use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::command;
 
+/// Updates Homebrew packages.
+///
+/// Executes `brew update` and `brew upgrade` sequentially.
+///
+/// # Errors
+/// Returns error if brew commands fail
 pub fn update_brew() -> Result<()> {
     println!("Updating Homebrew");
 
@@ -11,6 +23,12 @@ pub fn update_brew() -> Result<()> {
     Ok(())
 }
 
+/// Updates Rust toolchain via rustup.
+///
+/// Executes `rustup update` to update all installed toolchains.
+///
+/// # Errors
+/// Returns error if rustup command fails
 pub fn update_rustup() -> Result<()> {
     println!("Updating Rust toolchain");
 
@@ -20,6 +38,13 @@ pub fn update_rustup() -> Result<()> {
     Ok(())
 }
 
+/// Updates both Homebrew and Rust toolchain.
+///
+/// Continues execution even if one update fails, reporting all failures
+/// at the end.
+///
+/// # Errors
+/// Returns error if any update fails, with details of which updates failed
 pub fn update_all() -> Result<()> {
     let mut errors = Vec::new();
 

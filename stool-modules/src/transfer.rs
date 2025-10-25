@@ -1,13 +1,35 @@
+//! File transfer module.
+//!
+//! Handles SCP-based file transfers between local and remote systems:
+//! - Upload files to remote servers
+//! - Download files from remote servers
+//! - Supports multiple authentication methods (key, password, default)
+
 use stool_core::config::Server;
 use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::{command, interactive};
 
+/// Transfer mode selection.
 #[derive(Debug)]
 pub enum TransferMode {
     Upload,
     Download,
 }
 
+/// Initiates file transfer between local and remote systems.
+///
+/// Presents interactive menus for:
+/// 1. Transfer mode selection (upload/download)
+/// 2. Server selection from config or manual input
+/// 3. File path inputs
+///
+/// Uses SCP with authentication based on server configuration.
+///
+/// # Arguments
+/// * `servers` - List of available servers from configuration
+///
+/// # Errors
+/// Returns error if transfer fails or user input is invalid
 pub fn transfer(servers: &[Server]) -> Result<()> {
     // Select transfer mode
     let mode_items: Vec<String> = vec![

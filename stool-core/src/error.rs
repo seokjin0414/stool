@@ -1,5 +1,14 @@
+//! Error types and result handling for stool.
+//!
+//! This module provides a unified error handling system using [`StoolError`]
+//! and [`StoolErrorType`] enum for all stool operations.
+
 use std::fmt;
 
+/// Error types for all stool operations.
+///
+/// Each variant represents a specific category of error that can occur
+/// during stool execution. Implements Copy for easy error type reuse.
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StoolErrorType {
@@ -82,6 +91,10 @@ impl fmt::Display for StoolErrorType {
     }
 }
 
+/// Error type with additional context.
+///
+/// Wraps a [`StoolErrorType`] with optional message and source error
+/// for detailed error reporting.
 #[derive(Debug)]
 pub struct StoolError {
     pub error_type: StoolErrorType,
@@ -90,6 +103,7 @@ pub struct StoolError {
 }
 
 impl StoolError {
+    /// Creates a new error with the given type.
     pub fn new(error_type: StoolErrorType) -> Self {
         Self {
             error_type,
@@ -98,11 +112,13 @@ impl StoolError {
         }
     }
 
+    /// Adds a descriptive message to the error.
     pub fn with_message(mut self, message: impl Into<String>) -> Self {
         self.message = Some(message.into());
         self
     }
 
+    /// Adds a source error for error chain tracking.
     pub fn with_source(mut self, source: impl std::error::Error + Send + Sync + 'static) -> Self {
         self.source = Some(Box::new(source));
         self
@@ -133,4 +149,7 @@ impl From<std::io::Error> for StoolError {
     }
 }
 
+/// Result type alias for stool operations.
+///
+/// Uses [`StoolError`] as the error type for all stool functions.
 pub type Result<T> = std::result::Result<T, StoolError>;
