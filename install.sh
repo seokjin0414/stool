@@ -126,6 +126,7 @@ if command -v stool &> /dev/null; then
     echo "   stool -s           # SSH connection"
     echo "   stool -u           # System update"
     echo "   stool -f find      # Find files"
+    echo "   stool -a conf      # AWS configure"
 else
     echo "❌ Installation verification failed"
     exit 1

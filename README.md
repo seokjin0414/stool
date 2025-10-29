@@ -48,6 +48,11 @@ stool --help
 - **Tab completion for local file paths**
 - **Empty input support for default paths**
 
+### AWS CLI Wrapper
+- Interactive AWS credential configuration
+- Wraps `aws configure` command
+- Command aliases: `configure`, `conf`
+
 ### Shell Completion
 - Auto-completion for Zsh, Bash, Fish, PowerShell
 - Automatically installed with install.sh
@@ -161,6 +166,13 @@ stool transfer --config servers.yaml   # Use external config file
   - Remote file path is required
   - Local destination path supports tab completion, empty input for default (~/Downloads/)
 
+### AWS CLI
+```bash
+stool aws configure    # Configure AWS credentials
+stool -a configure     # Short flag
+stool -a conf          # Alias
+```
+
 ### Shell Completion
 ```bash
 stool completion zsh              # Generate zsh completion
@@ -239,11 +251,12 @@ stool/
 ├── stool-core/        # Core types, config, and error handling
 │   ├── config.rs      # YAML config loading (embedded/external)
 │   └── error.rs       # Unified error types and Result alias
-├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer)
+├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer, aws)
 │   ├── ssh.rs         # SSH connection with server selection
 │   ├── update.rs      # System updates (brew, rustup)
 │   ├── filesystem.rs  # File search and count operations
-│   └── transfer.rs    # SCP file transfer (upload/download)
+│   ├── transfer.rs    # SCP file transfer (upload/download)
+│   └── aws.rs         # AWS CLI wrapper (configure)
 └── stool-utils/       # Shared utilities
     ├── interactive.rs # Server selection, text/path input (tab completion, optional)
     └── command.rs     # SSH/SCP/command execution helpers
