@@ -3,7 +3,7 @@ use clap_complete::{generate, Shell};
 use std::io;
 use stool_core::config::Config;
 use stool_core::error::Result;
-use stool_modules::{filesystem, ssh, transfer, update};
+use stool_modules::{aws, filesystem, ssh, transfer, update};
 
 #[derive(Parser)]
 #[command(name = "stool")]
@@ -52,6 +52,11 @@ enum Commands {
         )]
         config: Option<String>,
     },
+    #[command(short_flag = 'a', about = "AWS CLI wrapper")]
+    Aws {
+        #[command(subcommand)]
+        command: AwsCommands,
+    },
     #[command(about = "Generate shell completion script")]
     Completion {
         #[arg(value_enum, help = "Shell type (bash, zsh, fish, powershell)")]
@@ -73,6 +78,16 @@ enum FilesystemCommands {
         #[arg(help = "Target path (default: current directory)")]
         path: Option<String>,
     },
+}
+
+#[derive(Subcommand)]
+enum AwsCommands {
+    #[command(
+        alias = "configure",
+        alias = "conf",
+        about = "Configure AWS credentials (aws configure)"
+    )]
+    Configure,
 }
 
 fn main() -> Result<()> {
@@ -108,6 +123,11 @@ fn main() -> Result<()> {
             };
             transfer::transfer(&cfg.servers)?;
         }
+        Some(Commands::Aws { command }) => match command {
+            AwsCommands::Configure => {
+                aws::configure()?;
+            }
+        },
         Some(Commands::Completion { shell }) => {
             let mut cmd = Cli::command();
             generate(shell, &mut cmd, "stool", &mut io::stdout());

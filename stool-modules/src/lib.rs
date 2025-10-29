@@ -5,7 +5,9 @@
 //! - System update operations (Homebrew, Rust)
 //! - Filesystem operations (find, count)
 //! - File transfer via SCP
+//! - AWS CLI wrapper
 
+pub mod aws;
 pub mod filesystem;
 pub mod ssh;
 pub mod transfer;
