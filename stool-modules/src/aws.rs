@@ -15,15 +15,7 @@ use stool_utils::interactive;
 /// Pressing Enter without input keeps existing values.
 pub fn configure() -> Result<()> {
     // Check if AWS CLI is installed
-    let check = Command::new("which")
-        .arg("aws")
-        .output()
-        .map_err(|e| StoolError::new(StoolErrorType::AwsCliNotInstalled).with_source(e))?;
-
-    if !check.status.success() {
-        return Err(StoolError::new(StoolErrorType::AwsCliNotInstalled)
-            .with_message("AWS CLI is not installed. Install it via: brew install awscli"));
-    }
+    check_aws_cli()?;
 
     // Run aws configure interactively
     let status = Command::new("aws")
