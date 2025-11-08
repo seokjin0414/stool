@@ -88,6 +88,15 @@ enum AwsCommands {
         about = "Configure AWS credentials (aws configure)"
     )]
     Configure,
+    #[command(about = "Login to AWS ECR registry")]
+    Ecr {
+        #[arg(
+            short,
+            long,
+            help = "External config file (default: embedded config.yaml)"
+        )]
+        config: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -126,6 +135,14 @@ fn main() -> Result<()> {
         Some(Commands::Aws { command }) => match command {
             AwsCommands::Configure => {
                 aws::configure()?;
+            }
+            AwsCommands::Ecr { config } => {
+                let cfg = if let Some(path) = config {
+                    Config::load(&path)?
+                } else {
+                    Config::load_embedded()?
+                };
+                aws::ecr_login(&cfg.ecr_registries)?;
             }
         },
         Some(Commands::Completion { shell }) => {

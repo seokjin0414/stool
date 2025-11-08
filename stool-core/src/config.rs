@@ -20,10 +20,22 @@ pub struct Server {
     pub key_path: Option<String>,
 }
 
-/// Configuration container for server list.
+/// ECR registry configuration.
+///
+/// Represents AWS ECR registry with account and region details.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EcrRegistry {
+    pub name: String,
+    pub account_id: String,
+    pub region: String,
+}
+
+/// Configuration container for server list and ECR registries.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub servers: Vec<Server>,
+    #[serde(default)]
+    pub ecr_registries: Vec<EcrRegistry>,
 }
 
 impl Config {

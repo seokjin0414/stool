@@ -18,3 +18,12 @@ servers:
     ip: "ec2-123-45-67-89.compute.amazonaws.com"
     user: "ec2-user"
     key_path: "~/.ssh/aws-key.pem"
+
+ecr_registries:
+ - name: "Production ECR"
+   account_id: "010928203580"
+   region: "ap-northeast-2"
+
+ - name: "Dev ECR"
+   account_id: "123456789012"
+   region: "us-east-1"
