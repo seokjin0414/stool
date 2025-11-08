@@ -48,8 +48,20 @@ pub fn find(pattern: &str, path: Option<&str>) -> Result<()> {
 
     println!("Searching for '{}' in {}...", pattern, search_path);
 
+    // Compile regex once if using glob pattern
+    let compiled_regex = if !is_exact {
+        Some(compile_glob_pattern(&search_pattern)?)
+    } else {
+        None
+    };
+
     let mut results = Vec::new();
-    search_recursive(search_dir, &search_pattern, is_exact, &mut results)?;
+    search_recursive(
+        search_dir,
+        &search_pattern,
+        compiled_regex.as_ref(),
+        &mut results,
+    )?;
 
     if results.is_empty() {
         println!("No files found matching '{}'", pattern);
@@ -102,7 +114,7 @@ pub fn count(path: Option<&str>) -> Result<()> {
 fn search_recursive(
     dir: &Path,
     pattern: &str,
-    is_exact: bool,
+    compiled_regex: Option<&regex::Regex>,
     results: &mut Vec<String>,
 ) -> Result<()> {
     if !dir.is_dir() {
@@ -131,10 +143,10 @@ fn search_recursive(
 
         // Check file name against pattern
         if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-            let matches = if is_exact {
-                filename == pattern
+            let matches = if let Some(regex) = compiled_regex {
+                regex.is_match(filename)
             } else {
-                matches_glob(filename, pattern)?
+                filename == pattern
             };
 
             if matches {
@@ -144,25 +156,23 @@ fn search_recursive(
 
         // Recurse into subdirectories
         if path.is_dir() {
-            search_recursive(&path, pattern, is_exact, results)?;
+            search_recursive(&path, pattern, compiled_regex, results)?;
         }
     }
 
     Ok(())
 }
 
-// Simple glob matching (* and ?)
-fn matches_glob(text: &str, pattern: &str) -> Result<bool> {
+// Compile glob pattern to regex once
+fn compile_glob_pattern(pattern: &str) -> Result<regex::Regex> {
     let re_pattern = pattern
         .replace(".", "\\.")
         .replace("*", ".*")
         .replace("?", ".");
 
-    let regex = regex::Regex::new(&format!("^{}$", re_pattern)).map_err(|e| {
+    regex::Regex::new(&format!("^{}$", re_pattern)).map_err(|e| {
         StoolError::new(StoolErrorType::SearchPatternInvalid)
             .with_message(format!("Invalid pattern: {}", pattern))
             .with_source(e)
-    })?;
-
-    Ok(regex.is_match(text))
+    })
 }
