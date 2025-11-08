@@ -52,6 +52,9 @@ stool --help
 - Interactive AWS credential configuration
 - Wraps `aws configure` command
 - Command aliases: `configure`, `conf`
+- ECR login with interactive registry selection
+- Supports YAML config and manual input
+- Automatic `aws ecr get-login-password` + `docker login` pipeline
 
 ### Shell Completion
 - Auto-completion for Zsh, Bash, Fish, PowerShell
@@ -168,9 +171,13 @@ stool transfer --config servers.yaml   # Use external config file
 
 ### AWS CLI
 ```bash
-stool aws configure    # Configure AWS credentials
-stool -a configure     # Short flag
-stool -a conf          # Alias
+stool aws configure             # Configure AWS credentials
+stool -a configure              # Short flag
+stool -a conf                   # Alias
+
+stool aws ecr                   # ECR login (embedded config.yaml)
+stool -a ecr                    # Short flag
+stool -a ecr -c servers.yaml    # ECR login (external config file)
 ```
 
 ### Shell Completion
@@ -200,6 +207,15 @@ servers:
     ip: "10.0.0.50"
     user: "deploy"
     # No password or key_path - uses default SSH authentication
+
+ecr_registries:
+  - name: "Production ECR"
+    account_id: "123456789012"    # 12-digit AWS account ID
+    region: "ap-northeast-2"      # AWS region
+
+  - name: "Dev ECR"
+    account_id: "987654321098"
+    region: "us-east-1"
 ```
 
 ### Authentication Priority
@@ -249,14 +265,14 @@ stool completion fish > ~/.config/fish/completions/stool.fish
 stool/
 ├── stool-cli/         # Binary crate (CLI interface)
 ├── stool-core/        # Core types, config, and error handling
-│   ├── config.rs      # YAML config loading (embedded/external)
+│   ├── config.rs      # YAML config loading (Server, EcrRegistry)
 │   └── error.rs       # Unified error types and Result alias
 ├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer, aws)
 │   ├── ssh.rs         # SSH connection with server selection
 │   ├── update.rs      # System updates (brew, rustup)
 │   ├── filesystem.rs  # File search and count operations
 │   ├── transfer.rs    # SCP file transfer (upload/download)
-│   └── aws.rs         # AWS CLI wrapper (configure)
+│   └── aws.rs         # AWS CLI wrapper (configure, ECR login)
 └── stool-utils/       # Shared utilities
     ├── interactive.rs # Server selection, text/path input (tab completion, optional)
     └── command.rs     # SSH/SCP/command execution helpers
