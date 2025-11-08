@@ -154,7 +154,9 @@ fn execute_ecr_login(account_id: &str, region: &str) -> Result<()> {
             .with_message("Failed to get ECR login password"));
     }
 
-    let password = String::from_utf8_lossy(&password_output.stdout);
+    let password = String::from_utf8_lossy(&password_output.stdout)
+        .trim()
+        .to_string();
 
     // Docker login
     let mut docker_login = Command::new("docker")
