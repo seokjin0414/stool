@@ -127,7 +127,14 @@ fn search_recursive(
             .with_source(e)
     })?;
 
-    for entry in entries.flatten() {
+    for entry_result in entries {
+        let entry = match entry_result {
+            Ok(e) => e,
+            Err(e) => {
+                eprintln!("Warning: Failed to read entry in {}: {}", dir.display(), e);
+                continue;
+            }
+        };
         let path = entry.path();
 
         // Skip hidden directories (except current search root)
