@@ -355,7 +355,9 @@ cargo build --release
 
 ## License
 
-Personal project by seokjin0414
+MIT License
+
+Copyright (c) 2024 seokjin0414
 
 ## Author
 
