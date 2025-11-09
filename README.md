@@ -293,6 +293,10 @@ stool/
 - `config.yaml` is gitignored by default
 - Keep built binaries secure
 - Use external config files for sensitive environments
+- **Password Security:**
+  - Passwords passed via stdin (not command line arguments)
+  - Sensitive data cleared from memory after use (zeroize)
+  - No exposure in process list (`ps` command)
 
 ## Development
 
@@ -300,9 +304,11 @@ stool/
 
 **Error Handling:**
 - All errors use unified `StoolErrorType` enum (25 variants)
+- All error messages in English for consistency
 - `unwrap()` is completely prohibited; use `?` operator or `map_err()`
 - Error messages include contextual information (user@ip, paths, etc.)
 - Error chaining with `with_message()` and `with_source()`
+- Explicit handling of recoverable errors (e.g., directory read failures)
 
 **Code Organization:**
 - Common logic extracted to utility functions
