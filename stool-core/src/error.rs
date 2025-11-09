@@ -56,37 +56,37 @@ pub enum StoolErrorType {
 impl fmt::Display for StoolErrorType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::SshConnectionFailed => write!(f, "SSH 접속 실패"),
-            Self::SshAuthenticationFailed => write!(f, "SSH 인증 실패"),
-            Self::ServerNotFound => write!(f, "서버를 찾을 수 없음"),
-            Self::ExpectCommandFailed => write!(f, "expect 명령어 실행 실패"),
+            Self::SshConnectionFailed => write!(f, "SSH connection failed"),
+            Self::SshAuthenticationFailed => write!(f, "SSH authentication failed"),
+            Self::ServerNotFound => write!(f, "Server not found"),
+            Self::ExpectCommandFailed => write!(f, "expect command failed"),
 
-            Self::FileNotFound => write!(f, "파일을 찾을 수 없음"),
-            Self::SearchPatternInvalid => write!(f, "잘못된 검색 패턴"),
+            Self::FileNotFound => write!(f, "File not found"),
+            Self::SearchPatternInvalid => write!(f, "Invalid search pattern"),
 
-            Self::FileTransferFailed => write!(f, "파일 전송 실패"),
-            Self::ScpCommandFailed => write!(f, "scp 명령어 실행 실패"),
-            Self::SftpCommandFailed => write!(f, "sftp 명령어 실행 실패"),
-            Self::SourceFileNotFound => write!(f, "원본 파일을 찾을 수 없음"),
+            Self::FileTransferFailed => write!(f, "File transfer failed"),
+            Self::ScpCommandFailed => write!(f, "scp command failed"),
+            Self::SftpCommandFailed => write!(f, "sftp command failed"),
+            Self::SourceFileNotFound => write!(f, "Source file not found"),
 
-            Self::ConfigLoadFailed => write!(f, "설정 파일 로드 실패"),
-            Self::ConfigParseError => write!(f, "설정 파일 파싱 오류"),
-            Self::YamlParseError => write!(f, "YAML 파싱 오류"),
+            Self::ConfigLoadFailed => write!(f, "Config load failed"),
+            Self::ConfigParseError => write!(f, "Config parse error"),
+            Self::YamlParseError => write!(f, "YAML parse error"),
 
-            Self::BrewUpdateFailed => write!(f, "brew 업데이트 실패"),
-            Self::RustupUpdateFailed => write!(f, "rustup 업데이트 실패"),
+            Self::BrewUpdateFailed => write!(f, "brew update failed"),
+            Self::RustupUpdateFailed => write!(f, "rustup update failed"),
 
-            Self::DockerCommandFailed => write!(f, "도커 명령어 실행 실패"),
-            Self::DockerNotInstalled => write!(f, "도커가 설치되어 있지 않음"),
+            Self::DockerCommandFailed => write!(f, "Docker command failed"),
+            Self::DockerNotInstalled => write!(f, "Docker not installed"),
 
-            Self::AwsCommandFailed => write!(f, "AWS 명령어 실행 실패"),
-            Self::AwsCliNotInstalled => write!(f, "AWS CLI가 설치되어 있지 않음"),
+            Self::AwsCommandFailed => write!(f, "AWS command failed"),
+            Self::AwsCliNotInstalled => write!(f, "AWS CLI not installed"),
 
-            Self::CommandExecutionFailed => write!(f, "명령어 실행 실패"),
-            Self::InvalidInput => write!(f, "잘못된 입력"),
-            Self::PermissionDenied => write!(f, "권한 거부"),
-            Self::IoError => write!(f, "I/O 오류"),
-            Self::Cancelled => write!(f, "작업 취소됨"),
+            Self::CommandExecutionFailed => write!(f, "Command execution failed"),
+            Self::InvalidInput => write!(f, "Invalid input"),
+            Self::PermissionDenied => write!(f, "Permission denied"),
+            Self::IoError => write!(f, "I/O error"),
+            Self::Cancelled => write!(f, "Operation cancelled"),
         }
     }
 }
