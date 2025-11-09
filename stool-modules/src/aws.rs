@@ -141,6 +141,9 @@ fn select_ecr_registry(registries: &[EcrRegistry]) -> Result<Option<(String, Str
 
 /// Execute ECR login command.
 fn execute_ecr_login(account_id: &str, region: &str) -> Result<()> {
+    use std::io::Write;
+    use zeroize::Zeroize;
+
     let registry_url = format!("{}.dkr.ecr.{}.amazonaws.com", account_id, region);
 
     // Get ECR login password
@@ -154,7 +157,7 @@ fn execute_ecr_login(account_id: &str, region: &str) -> Result<()> {
             .with_message("Failed to get ECR login password"));
     }
 
-    let password = String::from_utf8_lossy(&password_output.stdout)
+    let mut password = String::from_utf8_lossy(&password_output.stdout)
         .trim()
         .to_string();
 
@@ -169,13 +172,19 @@ fn execute_ecr_login(account_id: &str, region: &str) -> Result<()> {
         ])
         .stdin(std::process::Stdio::piped())
         .spawn()
-        .map_err(|e| StoolError::new(StoolErrorType::DockerCommandFailed).with_source(e))?;
+        .map_err(|e| {
+            password.zeroize();
+            StoolError::new(StoolErrorType::DockerCommandFailed).with_source(e)
+        })?;
 
     if let Some(mut stdin) = docker_login.stdin.take() {
-        use std::io::Write;
-        stdin
+        let write_result = stdin
             .write_all(password.as_bytes())
-            .map_err(|e| StoolError::new(StoolErrorType::DockerCommandFailed).with_source(e))?;
+            .map_err(|e| StoolError::new(StoolErrorType::DockerCommandFailed).with_source(e));
+        password.zeroize();
+        write_result?;
+    } else {
+        password.zeroize();
     }
 
     let status = docker_login

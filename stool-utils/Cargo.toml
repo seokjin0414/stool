@@ -9,3 +9,4 @@ license.workspace = true
 stool-core = { path = "../stool-core" }
 dialoguer = { workspace = true }
 rustyline = { workspace = true }
+zeroize = { workspace = true }

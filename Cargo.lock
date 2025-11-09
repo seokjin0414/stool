@@ -515,6 +515,7 @@ dependencies = [
  "regex",
  "stool-core",
  "stool-utils",
+ "zeroize",
 ]
 
 [[package]]
@@ -524,6 +525,7 @@ dependencies = [
  "dialoguer",
  "rustyline",
  "stool-core",
+ "zeroize",
 ]
 
 [[package]]

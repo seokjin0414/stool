@@ -164,8 +164,9 @@ pub fn execute_scp(
 
 fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
     use std::io::Write;
+    use zeroize::Zeroize;
 
-    let script = format!(
+    let mut script = format!(
         r#"
         spawn ssh {user}@{ip}
         expect {{
@@ -188,17 +189,22 @@ fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
         .stdin(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| {
+            script.zeroize();
             StoolError::new(StoolErrorType::ExpectCommandFailed)
                 .with_message(format!("Failed to spawn expect for ssh to {}@{}", user, ip))
                 .with_source(e)
         })?;
 
     if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(script.as_bytes()).map_err(|e| {
+        let write_result = stdin.write_all(script.as_bytes()).map_err(|e| {
             StoolError::new(StoolErrorType::ExpectCommandFailed)
                 .with_message("Failed to write expect script to stdin")
                 .with_source(e)
-        })?;
+        });
+        script.zeroize();
+        write_result?;
+    } else {
+        script.zeroize();
     }
 
     let status = child.wait().map_err(|e| {
@@ -215,8 +221,9 @@ fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
 
 fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result<()> {
     use std::io::Write;
+    use zeroize::Zeroize;
 
-    let script = format!(
+    let mut script = format!(
         r#"
         spawn scp {source} {destination}
         expect {{
@@ -239,6 +246,7 @@ fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result
         .stdin(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| {
+            script.zeroize();
             StoolError::new(StoolErrorType::FileTransferFailed)
                 .with_message(format!(
                     "Failed to spawn expect for scp from {} to {}",
@@ -248,11 +256,15 @@ fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result
         })?;
 
     if let Some(mut stdin) = child.stdin.take() {
-        stdin.write_all(script.as_bytes()).map_err(|e| {
+        let write_result = stdin.write_all(script.as_bytes()).map_err(|e| {
             StoolError::new(StoolErrorType::FileTransferFailed)
                 .with_message("Failed to write expect script to stdin")
                 .with_source(e)
-        })?;
+        });
+        script.zeroize();
+        write_result?;
+    } else {
+        script.zeroize();
     }
 
     let status = child.wait().map_err(|e| {
