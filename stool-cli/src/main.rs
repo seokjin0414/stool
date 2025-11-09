@@ -9,6 +9,7 @@ use stool_modules::{aws, filesystem, ssh, transfer, update};
 #[command(name = "stool")]
 #[command(version)]
 #[command(about = "seokjin's CLI tool for Mac/Linux terminal tasks", long_about = None)]
+#[command(arg_required_else_help = true)]
 struct Cli {
     #[arg(short = 'v', short_alias = 'V', long, action = ArgAction::Version)]
     version: Option<bool>,
@@ -149,10 +150,7 @@ fn main() -> Result<()> {
             let mut cmd = Cli::command();
             generate(shell, &mut cmd, "stool", &mut io::stdout());
         }
-        None => {
-            // Version flag is already handled by clap
-            Cli::parse_from(["stool", "--help"]);
-        }
+        None => unreachable!("arg_required_else_help ensures a subcommand is provided"),
     }
 
     Ok(())
