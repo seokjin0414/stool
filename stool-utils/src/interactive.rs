@@ -6,7 +6,7 @@
 //! - List selection dialogs
 //! - File path input with tab completion
 
-use dialoguer::{theme::ColorfulTheme, Input, Select};
+use dialoguer::{theme::ColorfulTheme, Input, Password, Select};
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
@@ -107,6 +107,24 @@ pub fn input_text_optional(prompt: &str) -> Result<String> {
         .map_err(|e| StoolError::new(StoolErrorType::InvalidInput).with_source(e))
 }
 
+/// Prompts user for password input with masked display.
+///
+/// # Arguments
+/// * `prompt` - Message displayed before input field
+///
+/// # Returns
+/// User-entered password string (may be empty)
+///
+/// # Errors
+/// Returns error if user interaction fails
+pub fn input_password(prompt: &str) -> Result<String> {
+    Password::with_theme(&ColorfulTheme::default())
+        .with_prompt(prompt)
+        .allow_empty_password(true)
+        .interact()
+        .map_err(|e| StoolError::new(StoolErrorType::InvalidInput).with_source(e))
+}
+
 /// Prompts user for file path input with tab completion.
 ///
 /// Provides interactive file path input with:
@@ -171,7 +189,7 @@ pub fn select_server(servers: &[Server]) -> Result<Option<ServerInfo>> {
         return Ok(None);
     }
 
-    let (user, ip, key_path, password) = if selection < servers.len() {
+    let (user, ip, key_path, mut password) = if selection < servers.len() {
         let server = &servers[selection];
         println!("Selected server: {} ({})", server.name, server.ip);
         (
@@ -187,6 +205,14 @@ pub fn select_server(servers: &[Server]) -> Result<Option<ServerInfo>> {
         println!("Target: {}@{}", user_input, ip_input);
         (user_input, ip_input, None, None)
     };
+
+    // Prompt for password if not in config and no key path
+    if password.is_none() && key_path.is_none() {
+        let pass = input_password("Enter password (leave empty for default SSH auth):")?;
+        if !pass.is_empty() {
+            password = Some(pass);
+        }
+    }
 
     Ok(Some((user, ip, key_path, password)))
 }

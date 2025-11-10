@@ -167,22 +167,18 @@ fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
     use zeroize::Zeroize;
 
     let mut script = format!(
-        r#"
-        spawn ssh {user}@{ip}
-        expect {{
-            "yes/no" {{
-                send "yes\r"
-                exp_continue
-            }}
-            "password:" {{
-                send "{pass}\r"
-            }}
-        }}
-        interact
-        "#,
-        user = user,
-        ip = ip,
-        pass = password
+        "spawn ssh {}@{}\n\
+expect {{\n\
+\"yes/no\" {{\n\
+send \"yes\\r\"\n\
+exp_continue\n\
+}}\n\
+\"assword:\" {{\n\
+send \"{}\\r\"\n\
+}}\n\
+}}\n\
+interact\n",
+        user, ip, password
     );
 
     let mut child = Command::new("expect")
@@ -224,22 +220,18 @@ fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result
     use zeroize::Zeroize;
 
     let mut script = format!(
-        r#"
-        spawn scp {source} {destination}
-        expect {{
-            "yes/no" {{
-                send "yes\r"
-                exp_continue
-            }}
-            "password:" {{
-                send "{pass}\r"
-            }}
-        }}
-        expect eof
-        "#,
-        source = source,
-        destination = destination,
-        pass = password
+        "spawn scp {} {}\n\
+expect {{\n\
+\"yes/no\" {{\n\
+send \"yes\\r\"\n\
+exp_continue\n\
+}}\n\
+\"assword:\" {{\n\
+send \"{}\\r\"\n\
+}}\n\
+}}\n\
+expect eof\n",
+        source, destination, password
     );
 
     let mut child = Command::new("expect")
