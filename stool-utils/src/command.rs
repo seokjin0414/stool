@@ -169,11 +169,11 @@ fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
     let mut script = format!(
         "spawn ssh {}@{}\n\
 expect {{\n\
-\"yes/no\" {{\n\
+\"*yes/no*\" {{\n\
 send \"yes\\r\"\n\
 exp_continue\n\
 }}\n\
-\"assword:\" {{\n\
+\"*assword*\" {{\n\
 send \"{}\\r\"\n\
 }}\n\
 }}\n\
@@ -224,11 +224,11 @@ fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result
     let mut script = format!(
         "spawn scp {} {}\n\
 expect {{\n\
-\"yes/no\" {{\n\
+\"*yes/no*\" {{\n\
 send \"yes\\r\"\n\
 exp_continue\n\
 }}\n\
-\"assword:\" {{\n\
+\"*assword*\" {{\n\
 send \"{}\\r\"\n\
 }}\n\
 }}\n\
