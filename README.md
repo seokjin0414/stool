@@ -2,6 +2,8 @@
 
 A personal CLI tool for Mac/Linux terminal tasks written in Rust.
 
+**Tech Stack:** Rust 2024 Edition
+
 ## Quick Start
 
 ```bash
@@ -24,7 +26,10 @@ stool --help
   - Password authentication (with expect)
     - Auto-accepts host key fingerprint
     - Auto-enters password
-  - Default SSH key
+  - Password prompt (if not in config)
+    - Masked password input
+    - Optional: leave empty for default SSH authentication
+  - Default SSH key (ssh-agent, ~/.ssh/config)
 - Server configuration embedded at build time
 - External config file support
 
@@ -42,11 +47,12 @@ stool --help
 - Upload/Download support
 - Server selection from config or manual IP input
 - Cancel option (silent exit)
-- Same authentication methods as SSH
+- Same authentication methods as SSH (including password prompt)
 - Default paths: Upload(~/), Download(~/Downloads/)
 - External config file support
 - **Tab completion for local file paths**
 - **Empty input support for default paths**
+- **Masked password input when not in config**
 
 ### AWS CLI Wrapper
 - Interactive AWS credential configuration
@@ -221,7 +227,9 @@ ecr_registries:
 ### Authentication Priority
 1. `key_path` - PEM key authentication
 2. `password` - Password with expect script
-3. Default - Standard SSH connection
+3. If neither exists - Password prompt with masked input
+   - Enter password: Uses expect script for authentication
+   - Leave empty: Uses default SSH authentication (ssh-agent, ~/.ssh/config)
 
 ### Updating Configuration
 ```bash
@@ -274,8 +282,8 @@ stool/
 │   ├── transfer.rs    # SCP file transfer (upload/download)
 │   └── aws.rs         # AWS CLI wrapper (configure, ECR login)
 └── stool-utils/       # Shared utilities
-    ├── interactive.rs # Server selection, text/path input (tab completion, optional)
-    └── command.rs     # SSH/SCP/command execution helpers
+    ├── interactive.rs # Server selection, text/password/path input (masked, tab completion)
+    └── command.rs     # SSH/SCP/command execution with expect -c
 ```
 
 **Architecture Highlights:**
@@ -294,9 +302,12 @@ stool/
 - Keep built binaries secure
 - Use external config files for sensitive environments
 - **Password Security:**
-  - Passwords passed via stdin (not command line arguments)
-  - Sensitive data cleared from memory after use (zeroize)
-  - No exposure in process list (`ps` command)
+  - **expect script method:** Uses `expect -c` to pass scripts as command-line arguments
+    - Standard and stable approach for expect automation
+    - Passwords embedded in script string but cleared after process termination
+    - Alternative stdin method causes conflicts with interactive mode
+  - **Interactive password prompt:** Masked input using dialoguer::Password
+  - **ECR passwords:** Passed via stdin to docker login (--password-stdin)
 
 ## Development
 
