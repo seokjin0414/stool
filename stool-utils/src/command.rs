@@ -182,6 +182,7 @@ interact\n",
     );
 
     let mut child = Command::new("expect")
+        .arg("-")
         .stdin(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| {
@@ -199,6 +200,7 @@ interact\n",
         });
         script.zeroize();
         write_result?;
+        drop(stdin);
     } else {
         script.zeroize();
     }
@@ -235,6 +237,7 @@ expect eof\n",
     );
 
     let mut child = Command::new("expect")
+        .arg("-")
         .stdin(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| {
@@ -255,6 +258,7 @@ expect eof\n",
         });
         script.zeroize();
         write_result?;
+        drop(stdin);
     } else {
         script.zeroize();
     }

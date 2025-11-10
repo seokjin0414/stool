@@ -183,6 +183,7 @@ fn execute_ecr_login(account_id: &str, region: &str) -> Result<()> {
             .map_err(|e| StoolError::new(StoolErrorType::DockerCommandFailed).with_source(e));
         password.zeroize();
         write_result?;
+        drop(stdin);
     } else {
         password.zeroize();
     }
