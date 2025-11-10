@@ -167,14 +167,18 @@ fn execute_expect_ssh(user: &str, ip: &str, password: &str) -> Result<()> {
     use zeroize::Zeroize;
 
     let mut script = format!(
-        "spawn ssh {}@{}\n\
+        "set timeout 30\n\
+spawn ssh {}@{}\n\
 expect {{\n\
-\"*yes/no*\" {{\n\
+-re \"(yes/no)\" {{\n\
 send \"yes\\r\"\n\
 exp_continue\n\
 }}\n\
-\"*assword*\" {{\n\
+-re \"password:\" {{\n\
 send \"{}\\r\"\n\
+}}\n\
+timeout {{\n\
+exit 1\n\
 }}\n\
 }}\n\
 interact\n",
@@ -222,14 +226,18 @@ fn execute_expect_scp(source: &str, destination: &str, password: &str) -> Result
     use zeroize::Zeroize;
 
     let mut script = format!(
-        "spawn scp {} {}\n\
+        "set timeout 30\n\
+spawn scp {} {}\n\
 expect {{\n\
-\"*yes/no*\" {{\n\
+-re \"(yes/no)\" {{\n\
 send \"yes\\r\"\n\
 exp_continue\n\
 }}\n\
-\"*assword*\" {{\n\
+-re \"password:\" {{\n\
 send \"{}\\r\"\n\
+}}\n\
+timeout {{\n\
+exit 1\n\
 }}\n\
 }}\n\
 expect eof\n",
