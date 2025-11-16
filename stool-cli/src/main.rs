@@ -3,7 +3,7 @@ use clap_complete::{Shell, generate};
 use std::io;
 use stool_core::config::Config;
 use stool_core::error::Result;
-use stool_modules::{aws, filesystem, ssh, transfer, update};
+use stool_modules::{aws, docker, filesystem, ssh, transfer, update};
 
 #[derive(Parser)]
 #[command(name = "stool")]
@@ -53,6 +53,11 @@ enum Commands {
         )]
         config: Option<String>,
     },
+    #[command(short_flag = 'd', about = "Docker operations")]
+    Docker {
+        #[command(subcommand)]
+        command: DockerCommands,
+    },
     #[command(short_flag = 'a', about = "AWS CLI wrapper")]
     Aws {
         #[command(subcommand)]
@@ -78,6 +83,28 @@ enum FilesystemCommands {
     Count {
         #[arg(help = "Target path (default: current directory)")]
         path: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+enum DockerCommands {
+    #[command(about = "Build Docker image")]
+    Build {
+        #[arg(
+            short,
+            long,
+            help = "External config file (default: embedded config.yaml)"
+        )]
+        config: Option<String>,
+    },
+    #[command(about = "Build and push Docker image to ECR")]
+    Push {
+        #[arg(
+            short,
+            long,
+            help = "External config file (default: embedded config.yaml)"
+        )]
+        config: Option<String>,
     },
 }
 
@@ -133,6 +160,24 @@ fn main() -> Result<()> {
             };
             transfer::transfer(&cfg.servers)?;
         }
+        Some(Commands::Docker { command }) => match command {
+            DockerCommands::Build { config } => {
+                let cfg = if let Some(path) = config {
+                    Config::load(&path)?
+                } else {
+                    Config::load_embedded()?
+                };
+                docker::build_only(&cfg.ecr_registries)?;
+            }
+            DockerCommands::Push { config } => {
+                let cfg = if let Some(path) = config {
+                    Config::load(&path)?
+                } else {
+                    Config::load_embedded()?
+                };
+                docker::push_to_ecr(&cfg.ecr_registries)?;
+            }
+        },
         Some(Commands::Aws { command }) => match command {
             AwsCommands::Configure => {
                 aws::configure()?;

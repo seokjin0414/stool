@@ -28,6 +28,8 @@ pub struct EcrRegistry {
     pub name: String,
     pub account_id: String,
     pub region: String,
+    #[serde(default)]
+    pub images: Vec<String>,
 }
 
 /// Configuration container for server list and ECR registries.
