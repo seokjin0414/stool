@@ -144,9 +144,23 @@ source ~/.zshrc
 
 ### Help and Version
 ```bash
-stool --help
-stool --version
+stool --help                # Show all commands
+stool --version             # Show version
+
+# Detailed help for each command
+stool -s --help             # SSH connection help
+stool -u --help             # System update help
+stool -f --help             # Filesystem operations help
+stool -t --help             # File transfer help
+stool -d --help             # Docker operations help
+stool -a --help             # AWS CLI help
+
+# Subcommand help
+stool -d build --help       # Docker build detailed help
+stool -d push --help        # Docker push detailed help
 ```
+
+**Note:** All commands provide detailed help messages with features, options, and workflow descriptions.
 
 ### SSH Connection
 ```bash
