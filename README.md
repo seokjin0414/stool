@@ -54,6 +54,19 @@ stool --help
 - **Empty input support for default paths**
 - **Masked password input when not in config**
 
+### Docker Operations
+- **Build**: Build Docker images with standardized options
+  - Platform: `linux/arm64`
+  - Options: `--provenance=false --sbom=false`
+  - Tag: `{image}:latest`
+  - Image selection from config or manual input
+- **Push**: Build, tag, and push to AWS ECR
+  - Automatic version management with ECR integration
+  - Version types: major, middle, minor (minor default)
+  - Initial version: `0.1.0`
+  - Always pushes both `latest` and version tags
+  - Auto-increments version based on current ECR tags
+
 ### AWS CLI Wrapper
 - Interactive AWS credential configuration
 - Wraps `aws configure` command
@@ -175,6 +188,27 @@ stool transfer --config servers.yaml   # Use external config file
   - Remote file path is required
   - Local destination path supports tab completion, empty input for default (~/Downloads/)
 
+### Docker Operations
+```bash
+stool docker build                     # Build Docker image only
+stool -d build                         # Short flag
+stool -d build -c config.yaml          # Use external config file
+
+stool docker push                      # Build + tag + push to ECR
+stool -d push                          # Short flag
+stool -d push -c config.yaml           # Use external config file
+```
+
+**Workflow:**
+1. Select ECR registry from config
+2. Select or input Docker image name
+3. (For push) Build image with `--platform linux/arm64 --provenance=false --sbom=false`
+4. (For push) Select version type:
+   - major: 0.1.0 → 1.0.0
+   - middle: 0.1.0 → 0.2.0
+   - minor: 0.1.0 → 0.1.1 (default)
+5. (For push) Tag and push both `latest` and version tags
+
 ### AWS CLI
 ```bash
 stool aws configure             # Configure AWS credentials
@@ -218,10 +252,15 @@ ecr_registries:
   - name: "Production ECR"
     account_id: "123456789012"    # 12-digit AWS account ID
     region: "ap-northeast-2"      # AWS region
+    images:                       # Optional: Docker image names
+      - "my-app"
+      - "my-service"
 
   - name: "Dev ECR"
     account_id: "987654321098"
     region: "us-east-1"
+    images:
+      - "dev-app"
 ```
 
 ### Authentication Priority
@@ -275,11 +314,12 @@ stool/
 ├── stool-core/        # Core types, config, and error handling
 │   ├── config.rs      # YAML config loading (Server, EcrRegistry)
 │   └── error.rs       # Unified error types and Result alias
-├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer, aws)
+├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer, docker, aws)
 │   ├── ssh.rs         # SSH connection with server selection
 │   ├── update.rs      # System updates (brew, rustup)
 │   ├── filesystem.rs  # File search and count operations
 │   ├── transfer.rs    # SCP file transfer (upload/download)
+│   ├── docker.rs      # Docker operations (build, ECR push with version management)
 │   └── aws.rs         # AWS CLI wrapper (configure, ECR login)
 └── stool-utils/       # Shared utilities
     ├── interactive.rs # Server selection, text/password/path input (masked, tab completion)
