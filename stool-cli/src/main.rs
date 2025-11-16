@@ -23,7 +23,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    #[command(short_flag = 's', about = "SSH connection")]
+    #[command(
+        short_flag = 's',
+        about = "SSH connection",
+        long_about = "Connect to remote servers via SSH with multiple authentication methods\n\nFeatures:\n  - Server selection from config or manual input\n  - PEM key authentication\n  - Password authentication with expect\n  - Password prompt with masked input\n  - Default SSH authentication (ssh-agent, ~/.ssh/config)"
+    )]
     Ssh {
         #[arg(
             short,
@@ -32,19 +36,31 @@ enum Commands {
         )]
         config: Option<String>,
     },
-    #[command(short_flag = 'u', about = "System updates (brew, rustup)")]
+    #[command(
+        short_flag = 'u',
+        about = "System updates (brew, rustup)",
+        long_about = "Update system packages and toolchains\n\nOptions:\n  --brew   - Update Homebrew packages only\n  --rustup - Update Rust toolchain only\n  (no flags) - Update both brew and rustup"
+    )]
     Update {
         #[arg(long, help = "Update Homebrew only")]
         brew: bool,
         #[arg(long, help = "Update Rust toolchain only")]
         rustup: bool,
     },
-    #[command(short_flag = 'f', about = "Filesystem operations")]
+    #[command(
+        short_flag = 'f',
+        about = "Filesystem operations",
+        long_about = "File search and directory operations\n\nCommands:\n  find  - Find files by pattern (exact, glob, or partial match)\n  count - Count files and directories in a path"
+    )]
     Filesystem {
         #[command(subcommand)]
         command: FilesystemCommands,
     },
-    #[command(short_flag = 't', about = "File transfer (scp)")]
+    #[command(
+        short_flag = 't',
+        about = "File transfer (scp)",
+        long_about = "Transfer files between local and remote systems via SCP\n\nFeatures:\n  - Upload/Download support\n  - Server selection from config or manual input\n  - Tab completion for local file paths\n  - Default paths: Upload(~/), Download(~/Downloads/)\n  - Same authentication methods as SSH"
+    )]
     Transfer {
         #[arg(
             short,
