@@ -191,17 +191,18 @@ pub fn push_to_ecr(registries: &[EcrRegistry]) -> Result<()> {
             minor: 0,
         });
         vec![
-            format!("1. latest"),
-            format!("2. major ({})", v.increment(VersionIncrement::Major)),
-            format!("3. middle ({})", v.increment(VersionIncrement::Middle)),
-            format!("4. minor ({})", v.increment(VersionIncrement::Minor)),
+            format!("1. major ({})", v.increment(VersionIncrement::Major)),
+            format!("2. middle ({})", v.increment(VersionIncrement::Middle)),
+            format!(
+                "3. minor ({}) [default]",
+                v.increment(VersionIncrement::Minor)
+            ),
         ]
     } else {
         vec![
-            "1. latest".to_string(),
-            "2. major (1.0.0)".to_string(),
-            "3. middle (0.1.0)".to_string(),
-            "4. minor (0.0.1)".to_string(),
+            "1. major (1.0.0)".to_string(),
+            "2. middle (0.1.0)".to_string(),
+            "3. minor (0.1.0) [default]".to_string(),
         ]
     };
 
@@ -214,18 +215,15 @@ pub fn push_to_ecr(registries: &[EcrRegistry]) -> Result<()> {
             minor: 0,
         });
         match version_idx {
-            0 => v.increment(VersionIncrement::Latest),
-            1 => v.increment(VersionIncrement::Major),
-            2 => v.increment(VersionIncrement::Middle),
-            3 => v.increment(VersionIncrement::Minor),
+            0 => v.increment(VersionIncrement::Major),
+            1 => v.increment(VersionIncrement::Middle),
+            2 => v.increment(VersionIncrement::Minor),
             _ => return Err(StoolError::new(StoolErrorType::InvalidInput)),
         }
     } else {
         match version_idx {
-            0 => "latest".to_string(),
-            1 => "1.0.0".to_string(),
-            2 => "0.1.0".to_string(),
-            3 => "0.0.1".to_string(),
+            0 => "1.0.0".to_string(),
+            1 | 2 => "0.1.0".to_string(),
             _ => return Err(StoolError::new(StoolErrorType::InvalidInput)),
         }
     };
@@ -237,34 +235,22 @@ pub fn push_to_ecr(registries: &[EcrRegistry]) -> Result<()> {
 
     // Tag for latest
     println!("Tagging image: {}:{}", image_name, DEFAULT_TAG);
-    execute_docker(&[
-        "tag",
-        &format!("{}:latest", image_name),
-        &format!("{}/{}:latest", ecr_url, image_name),
-    ])?;
+    let local_tag = format!("{}:latest", image_name);
+    let ecr_tag_latest = format!("{}/{}:latest", ecr_url, image_name);
+    execute_docker(&["tag", &local_tag, &ecr_tag_latest])?;
 
     // Tag for version
-    if new_version != "latest" {
-        println!("Tagging image: {}:{}", image_name, new_version);
-        execute_docker(&[
-            "tag",
-            &format!("{}:latest", image_name),
-            &format!("{}/{}:{}", ecr_url, image_name, new_version),
-        ])?;
-    }
+    println!("Tagging image: {}:{}", image_name, new_version);
+    let ecr_tag_version = format!("{}/{}:{}", ecr_url, image_name, new_version);
+    execute_docker(&["tag", &local_tag, &ecr_tag_version])?;
 
     // Push latest
     println!("Pushing {}/{}:latest", ecr_url, image_name);
-    execute_docker(&["push", &format!("{}/{}:latest", ecr_url, image_name)])?;
+    execute_docker(&["push", &ecr_tag_latest])?;
 
     // Push version
-    if new_version != "latest" {
-        println!("Pushing {}/{}:{}", ecr_url, image_name, new_version);
-        execute_docker(&[
-            "push",
-            &format!("{}/{}:{}", ecr_url, image_name, new_version),
-        ])?;
-    }
+    println!("Pushing {}/{}:{}", ecr_url, image_name, new_version);
+    execute_docker(&["push", &ecr_tag_version])?;
 
     println!("Push completed successfully");
     Ok(())
