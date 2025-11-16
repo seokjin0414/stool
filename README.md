@@ -1,8 +1,12 @@
-# Stool
+<div align="center">
+  <img src="stool_logo.png" alt="Stool Logo" width="200"/>
 
-A personal CLI tool for Mac/Linux terminal tasks written in Rust.
+  # Stool
 
-**Tech Stack:** Rust 2024 Edition
+  A personal CLI tool for Mac/Linux terminal tasks written in Rust.
+
+  **Tech Stack:** Rust 2024 Edition
+</div>
 
 ## Quick Start
 
