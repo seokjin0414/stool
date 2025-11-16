@@ -12,8 +12,15 @@ use stool_utils::{command, interactive};
 /// Default remote path for upload operations.
 const DEFAULT_REMOTE_PATH: &str = "~/";
 
-/// Default local path for download operations.
-const DEFAULT_LOCAL_PATH: &str = "~/Downloads/";
+/// Gets the default local download path.
+/// Returns the user's Downloads directory by expanding HOME environment variable.
+fn get_default_local_path() -> String {
+    if let Ok(home) = std::env::var("HOME") {
+        format!("{}/Downloads/", home)
+    } else {
+        String::from("~/Downloads/")
+    }
+}
 
 /// Transfer mode selection.
 #[derive(Debug)]
@@ -103,10 +110,11 @@ fn execute_download(
     password: Option<&str>,
 ) -> Result<()> {
     let remote_path = interactive::input_text("Remote file path:")?;
+    let default_path = get_default_local_path();
     let local_path_input =
-        interactive::input_path(&format!("Local path (default: {}): ", DEFAULT_LOCAL_PATH))?;
+        interactive::input_path(&format!("Local path (default: {}): ", default_path))?;
     let local_path = if local_path_input.trim().is_empty() {
-        DEFAULT_LOCAL_PATH.to_string()
+        default_path
     } else {
         local_path_input
     };
