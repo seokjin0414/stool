@@ -53,12 +53,20 @@ enum Commands {
         )]
         config: Option<String>,
     },
-    #[command(short_flag = 'd', about = "Docker operations")]
+    #[command(
+        short_flag = 'd',
+        about = "Docker operations",
+        long_about = "Docker image build and ECR deployment operations\n\nCommands:\n  build - Build Docker image with standardized options\n  push  - Build, tag, and push to AWS ECR with version management"
+    )]
     Docker {
         #[command(subcommand)]
         command: DockerCommands,
     },
-    #[command(short_flag = 'a', about = "AWS CLI wrapper")]
+    #[command(
+        short_flag = 'a',
+        about = "AWS CLI wrapper",
+        long_about = "AWS CLI operations and ECR authentication\n\nCommands:\n  configure - Interactive AWS credential configuration\n  ecr       - Login to AWS ECR registry"
+    )]
     Aws {
         #[command(subcommand)]
         command: AwsCommands,
@@ -88,7 +96,10 @@ enum FilesystemCommands {
 
 #[derive(Subcommand)]
 enum DockerCommands {
-    #[command(about = "Build Docker image")]
+    #[command(
+        about = "Build Docker image",
+        long_about = "Build Docker image with platform options (linux/arm64, --provenance=false, --sbom=false)\nImage name can be selected from config or manually entered"
+    )]
     Build {
         #[arg(
             short,
@@ -97,7 +108,10 @@ enum DockerCommands {
         )]
         config: Option<String>,
     },
-    #[command(about = "Build and push Docker image to ECR")]
+    #[command(
+        about = "Build and push Docker image to ECR",
+        long_about = "Build, tag, and push Docker image to AWS ECR with automatic version management\n\nWorkflow:\n1. Select ECR registry\n2. Select or input image name\n3. Build with standard options\n4. Select version type (major/middle/minor)\n5. Tag and push both 'latest' and version tags"
+    )]
     Push {
         #[arg(
             short,
