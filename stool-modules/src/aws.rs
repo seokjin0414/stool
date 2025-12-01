@@ -47,10 +47,11 @@ pub fn sso_configure(configs: &[SsoConfig]) -> Result<()> {
 
     // expect script:
     // - Auto: SSO session name, start URL, region, scopes
-    // - Manual: account selection, role selection (interact)
+    // - Wait/interact for browser auth, account/role selection
     // - Auto: Default region, output format, profile name
     let script = format!(
         r#"
+        set timeout -1
         spawn aws configure sso
         expect "SSO session name"
         send "{sso_session_name}\r"
@@ -60,17 +61,13 @@ pub fn sso_configure(configs: &[SsoConfig]) -> Result<()> {
         send "{sso_region}\r"
         expect "SSO registration scopes"
         send "\r"
-        interact {{
-            \r {{
-                expect "Default client Region"
-                send "{region}\r"
-                expect "CLI default output format"
-                send "{output_format}\r"
-                expect "Profile name"
-                send "{profile_name}\r"
-                expect eof
-            }}
-        }}
+        interact -o "Default client Region" return
+        send "{region}\r"
+        expect "CLI default output format"
+        send "{output_format}\r"
+        expect "Profile name"
+        send "{profile_name}\r"
+        expect eof
         "#,
         sso_session_name = cfg.sso_session_name,
         start_url = cfg.start_url,
