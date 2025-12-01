@@ -147,9 +147,23 @@ enum AwsCommands {
     )]
     Configure,
     #[command(about = "Configure AWS SSO (aws configure sso)")]
-    Sso,
+    Sso {
+        #[arg(
+            short,
+            long,
+            help = "External config file (default: embedded config.yaml)"
+        )]
+        config: Option<String>,
+    },
     #[command(about = "SSO login/token refresh (aws sso login)")]
-    Login,
+    Login {
+        #[arg(
+            short,
+            long,
+            help = "External config file (default: embedded config.yaml)"
+        )]
+        config: Option<String>,
+    },
     #[command(about = "Login to AWS ECR registry")]
     Ecr {
         #[arg(
@@ -216,11 +230,21 @@ fn main() -> Result<()> {
             AwsCommands::Configure => {
                 aws::configure()?;
             }
-            AwsCommands::Sso => {
-                aws::sso_configure()?;
+            AwsCommands::Sso { config } => {
+                let cfg = if let Some(path) = config {
+                    Config::load(&path)?
+                } else {
+                    Config::load_embedded()?
+                };
+                aws::sso_configure(&cfg.sso_configs)?;
             }
-            AwsCommands::Login => {
-                aws::sso_login()?;
+            AwsCommands::Login { config } => {
+                let cfg = if let Some(path) = config {
+                    Config::load(&path)?
+                } else {
+                    Config::load_embedded()?
+                };
+                aws::sso_login(&cfg.sso_configs)?;
             }
             AwsCommands::Ecr { config } => {
                 let cfg = if let Some(path) = config {

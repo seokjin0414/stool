@@ -32,12 +32,24 @@ pub struct EcrRegistry {
     pub images: Vec<String>,
 }
 
+/// AWS SSO configuration.
+///
+/// Represents AWS IAM Identity Center (SSO) settings.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SsoConfig {
+    pub name: String,
+    pub start_url: String,
+    pub region: String,
+}
+
 /// Configuration container for server list and ECR registries.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub servers: Vec<Server>,
     #[serde(default)]
     pub ecr_registries: Vec<EcrRegistry>,
+    #[serde(default)]
+    pub sso_configs: Vec<SsoConfig>,
 }
 
 impl Config {

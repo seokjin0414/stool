@@ -33,3 +33,12 @@ ecr_registries:
    images:
      - "my-app"
      - "my-service"
+
+sso_configs:
+  - name: "my-sso-profile"
+    start_url: "https://my-company.awsapps.com/start"
+    region: "ap-northeast-2"
+
+  - name: "dev-sso-profile"
+    start_url: "https://my-company.awsapps.com/start"
+    region: "us-east-1"

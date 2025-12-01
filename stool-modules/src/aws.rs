@@ -4,7 +4,7 @@
 //! including aws configure and ECR login.
 
 use std::process::Command;
-use stool_core::config::EcrRegistry;
+use stool_core::config::{EcrRegistry, SsoConfig};
 use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::interactive;
 
@@ -34,17 +34,40 @@ pub fn configure() -> Result<()> {
 
 /// Configure AWS SSO interactively.
 ///
-/// Executes `aws configure sso` command which guides user through:
-/// - SSO start URL input
-/// - SSO region selection
-/// - Browser authentication
-/// - Account/Role selection
-/// - Profile naming
-pub fn sso_configure() -> Result<()> {
+/// Selects SSO config from YAML or manual input, then runs `aws configure sso`
+/// with pre-filled values for start URL, region, and name as profile.
+pub fn sso_configure(configs: &[SsoConfig]) -> Result<()> {
     check_aws_cli()?;
 
-    let status = Command::new("aws")
-        .args(["configure", "sso"])
+    let selected = select_sso_config(configs)?;
+
+    let (name, start_url, region) = match selected {
+        Some(cfg) => cfg,
+        None => return Ok(()), // User cancelled
+    };
+
+    // Run aws configure sso with pre-filled values via expect
+    let script = format!(
+        r#"
+        spawn aws configure sso
+        expect "SSO session name"
+        send "{name}\r"
+        expect "SSO start URL"
+        send "{start_url}\r"
+        expect "SSO region"
+        send "{region}\r"
+        expect "SSO registration scopes"
+        send "\r"
+        interact
+        "#,
+        name = name,
+        start_url = start_url,
+        region = region
+    );
+
+    let status = Command::new("expect")
+        .arg("-c")
+        .arg(&script)
         .status()
         .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
 
@@ -56,17 +79,55 @@ pub fn sso_configure() -> Result<()> {
     Ok(())
 }
 
+/// Select SSO config from list or manual input.
+/// Returns (name, start_url, region).
+fn select_sso_config(configs: &[SsoConfig]) -> Result<Option<(String, String, String)>> {
+    let mut items: Vec<String> = configs
+        .iter()
+        .enumerate()
+        .map(|(i, cfg)| format!("{}. {}", i + 1, cfg.name))
+        .collect();
+
+    items.push(format!("{}. Manual input", items.len() + 1));
+    items.push(format!("{}. Cancel", items.len() + 1));
+
+    let selection = interactive::select_from_list("Select SSO config:", &items)?;
+
+    if selection == items.len() - 1 {
+        return Ok(None);
+    } else if selection == items.len() - 2 {
+        let name = interactive::input_text("Profile name:")?;
+        let start_url = interactive::input_text("SSO start URL:")?;
+        let region = interactive::input_text("SSO region:")?;
+        return Ok(Some((name, start_url, region)));
+    } else if selection < configs.len() {
+        let cfg = &configs[selection];
+        return Ok(Some((
+            cfg.name.clone(),
+            cfg.start_url.clone(),
+            cfg.region.clone(),
+        )));
+    }
+
+    Err(StoolError::new(StoolErrorType::InvalidInput))
+}
+
 /// Login to AWS SSO or refresh token.
 ///
 /// Executes `aws sso login` command to authenticate via browser.
-/// Prompts user to select from available SSO profiles.
-pub fn sso_login() -> Result<()> {
+/// Selects profile from YAML config (using name as profile) or manual input.
+pub fn sso_login(configs: &[SsoConfig]) -> Result<()> {
     check_aws_cli()?;
 
-    let profile_name = select_sso_profile()?;
+    let profile_name = select_sso_profile(configs)?;
+
+    let profile = match profile_name {
+        Some(p) => p,
+        None => return Ok(()), // User cancelled
+    };
 
     let status = Command::new("aws")
-        .args(["sso", "login", "--profile", &profile_name])
+        .args(["sso", "login", "--profile", &profile])
         .status()
         .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
 
@@ -79,65 +140,29 @@ pub fn sso_login() -> Result<()> {
     Ok(())
 }
 
-/// Select SSO profile from available profiles in ~/.aws/config.
-fn select_sso_profile() -> Result<String> {
-    let profiles = get_sso_profiles()?;
-
-    if profiles.is_empty() {
-        return Err(StoolError::new(StoolErrorType::ConfigLoadFailed)
-            .with_message("No SSO profiles found. Run 'stool -a sso' first."));
-    }
-
-    let items: Vec<String> = profiles
+/// Select SSO profile from config or manual input.
+fn select_sso_profile(configs: &[SsoConfig]) -> Result<Option<String>> {
+    let mut items: Vec<String> = configs
         .iter()
         .enumerate()
-        .map(|(i, p)| format!("{}. {}", i + 1, p))
+        .map(|(i, cfg)| format!("{}. {}", i + 1, cfg.name))
         .collect();
+
+    items.push(format!("{}. Manual input", items.len() + 1));
+    items.push(format!("{}. Cancel", items.len() + 1));
 
     let selection = interactive::select_from_list("Select SSO profile:", &items)?;
 
-    Ok(profiles[selection].clone())
-}
-
-/// Get list of SSO profiles from ~/.aws/config.
-fn get_sso_profiles() -> Result<Vec<String>> {
-    let home =
-        std::env::var("HOME").map_err(|_| StoolError::new(StoolErrorType::ConfigLoadFailed))?;
-    let config_path = format!("{}/.aws/config", home);
-
-    let content = std::fs::read_to_string(&config_path).unwrap_or_default();
-
-    let mut profiles = Vec::new();
-    let mut current_profile: Option<String> = None;
-    let mut is_sso_profile = false;
-
-    for line in content.lines() {
-        let line = line.trim();
-
-        if line.starts_with("[profile ") && line.ends_with(']') {
-            // Save previous profile if it was SSO
-            if is_sso_profile && let Some(p) = current_profile.take() {
-                profiles.push(p);
-            }
-
-            // Extract profile name
-            let name = line
-                .trim_start_matches("[profile ")
-                .trim_end_matches(']')
-                .to_string();
-            current_profile = Some(name);
-            is_sso_profile = false;
-        } else if line.starts_with("sso_") {
-            is_sso_profile = true;
-        }
+    if selection == items.len() - 1 {
+        return Ok(None);
+    } else if selection == items.len() - 2 {
+        let profile = interactive::input_text("Profile name:")?;
+        return Ok(Some(profile));
+    } else if selection < configs.len() {
+        return Ok(Some(configs[selection].name.clone()));
     }
 
-    // Handle last profile
-    if is_sso_profile && let Some(p) = current_profile {
-        profiles.push(p);
-    }
-
-    Ok(profiles)
+    Err(StoolError::new(StoolErrorType::InvalidInput))
 }
 
 /// Login to AWS ECR registry.
