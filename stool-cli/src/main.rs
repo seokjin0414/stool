@@ -146,6 +146,10 @@ enum AwsCommands {
         about = "Configure AWS credentials (aws configure)"
     )]
     Configure,
+    #[command(about = "Configure AWS SSO (aws configure sso)")]
+    Sso,
+    #[command(about = "SSO login/token refresh (aws sso login)")]
+    Login,
     #[command(about = "Login to AWS ECR registry")]
     Ecr {
         #[arg(
@@ -211,6 +215,12 @@ fn main() -> Result<()> {
         Some(Commands::Aws { command }) => match command {
             AwsCommands::Configure => {
                 aws::configure()?;
+            }
+            AwsCommands::Sso => {
+                aws::sso_configure()?;
+            }
+            AwsCommands::Login => {
+                aws::sso_login()?;
             }
             AwsCommands::Ecr { config } => {
                 let cfg = if let Some(path) = config {

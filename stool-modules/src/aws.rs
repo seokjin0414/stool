@@ -32,6 +32,114 @@ pub fn configure() -> Result<()> {
     Ok(())
 }
 
+/// Configure AWS SSO interactively.
+///
+/// Executes `aws configure sso` command which guides user through:
+/// - SSO start URL input
+/// - SSO region selection
+/// - Browser authentication
+/// - Account/Role selection
+/// - Profile naming
+pub fn sso_configure() -> Result<()> {
+    check_aws_cli()?;
+
+    let status = Command::new("aws")
+        .args(["configure", "sso"])
+        .status()
+        .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
+
+    if !status.success() {
+        return Err(StoolError::new(StoolErrorType::AwsCommandFailed)
+            .with_message("aws configure sso failed"));
+    }
+
+    Ok(())
+}
+
+/// Login to AWS SSO or refresh token.
+///
+/// Executes `aws sso login` command to authenticate via browser.
+/// Prompts user to select from available SSO profiles.
+pub fn sso_login() -> Result<()> {
+    check_aws_cli()?;
+
+    let profile_name = select_sso_profile()?;
+
+    let status = Command::new("aws")
+        .args(["sso", "login", "--profile", &profile_name])
+        .status()
+        .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
+
+    if !status.success() {
+        return Err(
+            StoolError::new(StoolErrorType::AwsCommandFailed).with_message("aws sso login failed")
+        );
+    }
+
+    Ok(())
+}
+
+/// Select SSO profile from available profiles in ~/.aws/config.
+fn select_sso_profile() -> Result<String> {
+    let profiles = get_sso_profiles()?;
+
+    if profiles.is_empty() {
+        return Err(StoolError::new(StoolErrorType::ConfigLoadFailed)
+            .with_message("No SSO profiles found. Run 'stool -a sso' first."));
+    }
+
+    let items: Vec<String> = profiles
+        .iter()
+        .enumerate()
+        .map(|(i, p)| format!("{}. {}", i + 1, p))
+        .collect();
+
+    let selection = interactive::select_from_list("Select SSO profile:", &items)?;
+
+    Ok(profiles[selection].clone())
+}
+
+/// Get list of SSO profiles from ~/.aws/config.
+fn get_sso_profiles() -> Result<Vec<String>> {
+    let home =
+        std::env::var("HOME").map_err(|_| StoolError::new(StoolErrorType::ConfigLoadFailed))?;
+    let config_path = format!("{}/.aws/config", home);
+
+    let content = std::fs::read_to_string(&config_path).unwrap_or_default();
+
+    let mut profiles = Vec::new();
+    let mut current_profile: Option<String> = None;
+    let mut is_sso_profile = false;
+
+    for line in content.lines() {
+        let line = line.trim();
+
+        if line.starts_with("[profile ") && line.ends_with(']') {
+            // Save previous profile if it was SSO
+            if is_sso_profile && let Some(p) = current_profile.take() {
+                profiles.push(p);
+            }
+
+            // Extract profile name
+            let name = line
+                .trim_start_matches("[profile ")
+                .trim_end_matches(']')
+                .to_string();
+            current_profile = Some(name);
+            is_sso_profile = false;
+        } else if line.starts_with("sso_") {
+            is_sso_profile = true;
+        }
+    }
+
+    // Handle last profile
+    if is_sso_profile && let Some(p) = current_profile {
+        profiles.push(p);
+    }
+
+    Ok(profiles)
+}
+
 /// Login to AWS ECR registry.
 ///
 /// Executes ECR login command:
