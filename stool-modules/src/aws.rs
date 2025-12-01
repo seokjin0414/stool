@@ -187,7 +187,7 @@ fn select_sso_profile(configs: &[SsoConfig]) -> Result<Option<String>> {
 /// Executes ECR login command:
 /// `aws ecr get-login-password --region {region} | docker login --username AWS --password-stdin {account_id}.dkr.ecr.{region}.amazonaws.com`
 ///
-/// Provides interactive menu to select from configured registries or manual input.
+/// If sso_profile is set, checks SSO session and logs in if needed.
 ///
 /// # Arguments
 /// * `registries` - List of ECR registries from configuration
@@ -204,18 +204,51 @@ pub fn ecr_login(registries: &[EcrRegistry]) -> Result<()> {
     // Select registry or manual input
     let registry_info = select_ecr_registry(registries)?;
 
-    let (account_id, region) = match registry_info {
+    let (account_id, region, sso_profile) = match registry_info {
         Some(info) => info,
         None => return Ok(()), // User cancelled
     };
 
+    // If SSO profile is set, check and login if needed
+    if let Some(ref profile) = sso_profile {
+        ensure_sso_login(profile)?;
+    }
+
     // Execute ECR login
-    execute_ecr_login(&account_id, &region)?;
+    execute_ecr_login(&account_id, &region, sso_profile.as_deref())?;
 
     println!(
         "Successfully logged in to ECR registry: {}.dkr.ecr.{}.amazonaws.com",
         account_id, region
     );
+    Ok(())
+}
+
+/// Check SSO session validity and login if expired.
+fn ensure_sso_login(profile: &str) -> Result<()> {
+    // Check if SSO session is valid
+    let check = Command::new("aws")
+        .args(["sts", "get-caller-identity", "--profile", profile])
+        .output()
+        .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
+
+    if check.status.success() {
+        return Ok(());
+    }
+
+    // SSO session expired, login
+    println!("SSO session expired. Logging in...");
+    let status = Command::new("aws")
+        .args(["sso", "login", "--profile", profile])
+        .status()
+        .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
+
+    if !status.success() {
+        return Err(
+            StoolError::new(StoolErrorType::AwsCommandFailed).with_message("SSO login failed")
+        );
+    }
+
     Ok(())
 }
 
@@ -251,18 +284,26 @@ fn check_docker() -> Result<()> {
 
 /// Select ECR registry from list or manual input.
 ///
-/// Returns (account_id, region) or None if cancelled.
-fn select_ecr_registry(registries: &[EcrRegistry]) -> Result<Option<(String, String)>> {
+/// Returns (account_id, region, sso_profile) or None if cancelled.
+fn select_ecr_registry(
+    registries: &[EcrRegistry],
+) -> Result<Option<(String, String, Option<String>)>> {
     let mut items: Vec<String> = registries
         .iter()
         .enumerate()
         .map(|(i, reg)| {
+            let sso_marker = if reg.sso_profile.is_some() {
+                " [SSO]"
+            } else {
+                ""
+            };
             format!(
-                "{}. {} ({}.dkr.ecr.{}.amazonaws.com)",
+                "{}. {} ({}.dkr.ecr.{}.amazonaws.com){}",
                 i + 1,
                 reg.name,
                 reg.account_id,
-                reg.region
+                reg.region,
+                sso_marker
             )
         })
         .collect();
@@ -276,29 +317,37 @@ fn select_ecr_registry(registries: &[EcrRegistry]) -> Result<Option<(String, Str
         // Cancel
         return Ok(None);
     } else if selection == items.len() - 2 {
-        // Manual input
+        // Manual input (no SSO)
         let account_id = interactive::input_text("AWS Account ID:")?;
         let region = interactive::input_text("AWS Region (e.g., ap-northeast-2):")?;
-        return Ok(Some((account_id, region)));
+        return Ok(Some((account_id, region, None)));
     } else if selection < registries.len() {
         // Selected from list
         let reg = &registries[selection];
-        return Ok(Some((reg.account_id.clone(), reg.region.clone())));
+        return Ok(Some((
+            reg.account_id.clone(),
+            reg.region.clone(),
+            reg.sso_profile.clone(),
+        )));
     }
 
     Err(StoolError::new(StoolErrorType::InvalidInput))
 }
 
 /// Execute ECR login command.
-fn execute_ecr_login(account_id: &str, region: &str) -> Result<()> {
+fn execute_ecr_login(account_id: &str, region: &str, profile: Option<&str>) -> Result<()> {
     use std::io::Write;
     use zeroize::Zeroize;
 
     let registry_url = format!("{}.dkr.ecr.{}.amazonaws.com", account_id, region);
 
     // Get ECR login password
-    let password_output = Command::new("aws")
-        .args(["ecr", "get-login-password", "--region", region])
+    let mut cmd = Command::new("aws");
+    cmd.args(["ecr", "get-login-password", "--region", region]);
+    if let Some(p) = profile {
+        cmd.args(["--profile", p]);
+    }
+    let password_output = cmd
         .output()
         .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
 

@@ -30,6 +30,8 @@ pub struct EcrRegistry {
     pub region: String,
     #[serde(default)]
     pub images: Vec<String>,
+    /// SSO profile name. If set, uses SSO authentication for ECR login.
+    pub sso_profile: Option<String>,
 }
 
 /// AWS SSO configuration.
