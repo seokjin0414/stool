@@ -78,6 +78,9 @@ stool --help
 - ECR login with interactive registry selection
 - Supports YAML config and manual input
 - Automatic `aws ecr get-login-password` + `docker login` pipeline
+- **SSO Support:**
+  - `sso`: Configure AWS SSO with hybrid auto/manual input
+  - `login`: SSO login/token refresh with profile selection
 
 ### Shell Completion
 - Auto-completion for Zsh, Bash, Fish, PowerShell
@@ -236,7 +239,16 @@ stool -a conf                   # Alias
 stool aws ecr                   # ECR login (embedded config.yaml)
 stool -a ecr                    # Short flag
 stool -a ecr -c servers.yaml    # ECR login (external config file)
+
+stool -a sso                    # Configure AWS SSO (hybrid auto/manual)
+stool -a login                  # SSO login/token refresh
 ```
+
+**SSO Configure Workflow:**
+1. Select SSO config from YAML or manual input
+2. Auto-fill: session name, start URL, region, scopes
+3. Manual: browser auth, account/role selection (arrow keys)
+4. Auto-fill: default region, output format, profile name
 
 ### Shell Completion
 ```bash
@@ -279,6 +291,13 @@ ecr_registries:
     region: "us-east-1"
     images:
       - "dev-app"
+
+sso_configs:
+  - profile_name: "my-profile"      # AWS CLI profile name
+    sso_session_name: "my-sso"      # SSO session name
+    start_url: "https://company.awsapps.com/start"
+    region: "ap-northeast-2"
+    output_format: "json"           # Optional: default is json
 ```
 
 ### Authentication Priority
