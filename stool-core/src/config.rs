@@ -37,9 +37,16 @@ pub struct EcrRegistry {
 /// Represents AWS IAM Identity Center (SSO) settings.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SsoConfig {
-    pub name: String,
+    pub profile_name: String,
+    pub sso_session_name: String,
     pub start_url: String,
     pub region: String,
+    #[serde(default = "default_output_format")]
+    pub output_format: String,
+}
+
+fn default_output_format() -> String {
+    "json".to_string()
 }
 
 /// Configuration container for server list and ECR registries.

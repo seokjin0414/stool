@@ -35,10 +35,14 @@ ecr_registries:
      - "my-service"
 
 sso_configs:
-  - name: "my-sso-profile"
+  - profile_name: "my-sso-profile"
+    sso_session_name: "my-sso"
     start_url: "https://my-company.awsapps.com/start"
     region: "ap-northeast-2"
+    output_format: "json"             # Optional: default is json
 
-  - name: "dev-sso-profile"
+  - profile_name: "dev-sso-profile"
+    sso_session_name: "dev-sso"
     start_url: "https://my-company.awsapps.com/start"
     region: "us-east-1"
+    # role not specified - will use the only available role

@@ -34,35 +34,50 @@ pub fn configure() -> Result<()> {
 
 /// Configure AWS SSO interactively.
 ///
-/// Selects SSO config from YAML or manual input, then runs `aws configure sso`
-/// with pre-filled values for start URL, region, and name as profile.
+/// Selects SSO config, auto-fills text inputs, manual selection for account/role.
 pub fn sso_configure(configs: &[SsoConfig]) -> Result<()> {
     check_aws_cli()?;
 
     let selected = select_sso_config(configs)?;
 
-    let (name, start_url, region) = match selected {
-        Some(cfg) => cfg,
+    let cfg = match selected {
+        Some(c) => c,
         None => return Ok(()), // User cancelled
     };
 
-    // Run aws configure sso with pre-filled values via expect
+    // expect script:
+    // - Auto: SSO session name, start URL, region, scopes
+    // - Manual: account selection, role selection (interact)
+    // - Auto: Default region, output format, profile name
     let script = format!(
         r#"
         spawn aws configure sso
         expect "SSO session name"
-        send "{name}\r"
+        send "{sso_session_name}\r"
         expect "SSO start URL"
         send "{start_url}\r"
         expect "SSO region"
-        send "{region}\r"
+        send "{sso_region}\r"
         expect "SSO registration scopes"
         send "\r"
-        interact
+        interact {{
+            \r {{
+                expect "Default client Region"
+                send "{region}\r"
+                expect "CLI default output format"
+                send "{output_format}\r"
+                expect "Profile name"
+                send "{profile_name}\r"
+                expect eof
+            }}
+        }}
         "#,
-        name = name,
-        start_url = start_url,
-        region = region
+        sso_session_name = cfg.sso_session_name,
+        start_url = cfg.start_url,
+        sso_region = cfg.region,
+        region = cfg.region,
+        output_format = cfg.output_format,
+        profile_name = cfg.profile_name
     );
 
     let status = Command::new("expect")
@@ -76,16 +91,19 @@ pub fn sso_configure(configs: &[SsoConfig]) -> Result<()> {
             .with_message("aws configure sso failed"));
     }
 
+    println!(
+        "SSO profile '{}' configured successfully.",
+        cfg.profile_name
+    );
     Ok(())
 }
 
 /// Select SSO config from list or manual input.
-/// Returns (name, start_url, region).
-fn select_sso_config(configs: &[SsoConfig]) -> Result<Option<(String, String, String)>> {
+fn select_sso_config(configs: &[SsoConfig]) -> Result<Option<SsoConfig>> {
     let mut items: Vec<String> = configs
         .iter()
         .enumerate()
-        .map(|(i, cfg)| format!("{}. {}", i + 1, cfg.name))
+        .map(|(i, cfg)| format!("{}. {}", i + 1, cfg.profile_name))
         .collect();
 
     items.push(format!("{}. Manual input", items.len() + 1));
@@ -96,17 +114,19 @@ fn select_sso_config(configs: &[SsoConfig]) -> Result<Option<(String, String, St
     if selection == items.len() - 1 {
         return Ok(None);
     } else if selection == items.len() - 2 {
-        let name = interactive::input_text("Profile name:")?;
+        let profile_name = interactive::input_text("Profile name:")?;
+        let sso_session_name = interactive::input_text("SSO session name:")?;
         let start_url = interactive::input_text("SSO start URL:")?;
-        let region = interactive::input_text("SSO region:")?;
-        return Ok(Some((name, start_url, region)));
+        let region = interactive::input_text("Region:")?;
+        return Ok(Some(SsoConfig {
+            profile_name,
+            sso_session_name,
+            start_url,
+            region,
+            output_format: "json".to_string(),
+        }));
     } else if selection < configs.len() {
-        let cfg = &configs[selection];
-        return Ok(Some((
-            cfg.name.clone(),
-            cfg.start_url.clone(),
-            cfg.region.clone(),
-        )));
+        return Ok(Some(configs[selection].clone()));
     }
 
     Err(StoolError::new(StoolErrorType::InvalidInput))
@@ -145,7 +165,7 @@ fn select_sso_profile(configs: &[SsoConfig]) -> Result<Option<String>> {
     let mut items: Vec<String> = configs
         .iter()
         .enumerate()
-        .map(|(i, cfg)| format!("{}. {}", i + 1, cfg.name))
+        .map(|(i, cfg)| format!("{}. {}", i + 1, cfg.profile_name))
         .collect();
 
     items.push(format!("{}. Manual input", items.len() + 1));
@@ -159,7 +179,7 @@ fn select_sso_profile(configs: &[SsoConfig]) -> Result<Option<String>> {
         let profile = interactive::input_text("Profile name:")?;
         return Ok(Some(profile));
     } else if selection < configs.len() {
-        return Ok(Some(configs[selection].name.clone()));
+        return Ok(Some(configs[selection].profile_name.clone()));
     }
 
     Err(StoolError::new(StoolErrorType::InvalidInput))
