@@ -81,6 +81,7 @@ stool --help
 - **SSO Support:**
   - `sso`: Configure AWS SSO with hybrid auto/manual input
   - `login`: SSO login/token refresh with profile selection
+  - ECR login with SSO: auto-checks session, logs in if expired
 
 ### Shell Completion
 - Auto-completion for Zsh, Bash, Fish, PowerShell
@@ -282,6 +283,7 @@ ecr_registries:
   - name: "Production ECR"
     account_id: "123456789012"    # 12-digit AWS account ID
     region: "ap-northeast-2"      # AWS region
+    sso_profile: "my-profile"     # Optional: use SSO authentication
     images:                       # Optional: Docker image names
       - "my-app"
       - "my-service"
@@ -289,6 +291,7 @@ ecr_registries:
   - name: "Dev ECR"
     account_id: "987654321098"
     region: "us-east-1"
+    # No sso_profile - uses default aws configure credentials
     images:
       - "dev-app"
 
