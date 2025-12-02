@@ -41,10 +41,13 @@ sso_configs:
     sso_session_name: "my-sso"
     start_url: "https://my-company.awsapps.com/start"
     region: "ap-northeast-2"
+    sso_account_id: "123456789012"
+    sso_role_name: "MyRole"
     output_format: "json"             # Optional: default is json
 
   - profile_name: "dev-sso-profile"
     sso_session_name: "dev-sso"
     start_url: "https://my-company.awsapps.com/start"
     region: "us-east-1"
-    # role not specified - will use the only available role
+    sso_account_id: "123456789013"
+    sso_role_name: "DevRole"

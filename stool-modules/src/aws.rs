@@ -45,53 +45,119 @@ pub fn sso_configure(configs: &[SsoConfig]) -> Result<()> {
         None => return Ok(()), // User cancelled
     };
 
-    // expect script:
-    // - Auto: SSO session name, start URL, region, scopes
-    // - Wait/interact for browser auth, account/role selection
-    // - Auto: Default region, output format, profile name
-    let script = format!(
-        r#"
-        set timeout -1
-        spawn aws configure sso
-        expect "SSO session name"
-        send "{sso_session_name}\r"
-        expect "SSO start URL"
-        send "{start_url}\r"
-        expect "SSO region"
-        send "{sso_region}\r"
-        expect "SSO registration scopes"
-        send "\r"
-        interact -o "Default client Region" return
-        send "{region}\r"
-        expect "CLI default output format"
-        send "{output_format}\r"
-        expect "Profile name"
-        send "{profile_name}\r"
-        expect eof
-        "#,
-        sso_session_name = cfg.sso_session_name,
-        start_url = cfg.start_url,
-        sso_region = cfg.region,
-        region = cfg.region,
-        output_format = cfg.output_format,
-        profile_name = cfg.profile_name
-    );
+    // Write SSO profile directly to ~/.aws/config
+    // This bypasses AWS CLI's interactive UI which requires CPR support.
+    write_sso_config(&cfg)?;
 
-    let status = Command::new("expect")
-        .arg("-c")
-        .arg(&script)
+    println!("SSO profile '{}' configured.", cfg.profile_name);
+
+    // Run sso login
+    let status = Command::new("aws")
+        .args(["sso", "login", "--profile", &cfg.profile_name])
         .status()
         .map_err(|e| StoolError::new(StoolErrorType::AwsCommandFailed).with_source(e))?;
 
     if !status.success() {
-        return Err(StoolError::new(StoolErrorType::AwsCommandFailed)
-            .with_message("aws configure sso failed"));
+        return Err(
+            StoolError::new(StoolErrorType::AwsCommandFailed).with_message("aws sso login failed")
+        );
     }
 
-    println!(
-        "SSO profile '{}' configured successfully.",
-        cfg.profile_name
+    Ok(())
+}
+
+/// Write SSO profile to ~/.aws/config.
+///
+/// Creates or updates the AWS config file with SSO profile and session.
+fn write_sso_config(cfg: &SsoConfig) -> Result<()> {
+    use std::fs::{self, OpenOptions};
+    use std::io::{Read, Write};
+    use std::path::PathBuf;
+
+    let home = std::env::var("HOME").map_err(|_| {
+        StoolError::new(StoolErrorType::AwsCommandFailed).with_message("HOME not set")
+    })?;
+    let aws_dir = PathBuf::from(&home).join(".aws");
+    let config_path = aws_dir.join("config");
+
+    // Create ~/.aws directory if not exists
+    if !aws_dir.exists() {
+        fs::create_dir_all(&aws_dir).map_err(|e| {
+            StoolError::new(StoolErrorType::AwsCommandFailed)
+                .with_message("Failed to create ~/.aws directory")
+                .with_source(e)
+        })?;
+    }
+
+    // Read existing config
+    let mut existing_content = String::new();
+    if config_path.exists() {
+        let mut file = fs::File::open(&config_path).map_err(|e| {
+            StoolError::new(StoolErrorType::AwsCommandFailed)
+                .with_message("Failed to read ~/.aws/config")
+                .with_source(e)
+        })?;
+        file.read_to_string(&mut existing_content).map_err(|e| {
+            StoolError::new(StoolErrorType::AwsCommandFailed)
+                .with_message("Failed to read ~/.aws/config")
+                .with_source(e)
+        })?;
+    }
+
+    // Check if profile/session already exists
+    let profile_header = format!("[profile {}]", cfg.profile_name);
+    let session_header = format!("[sso-session {}]", cfg.sso_session_name);
+
+    if existing_content.contains(&profile_header) {
+        println!("Profile '{}' already exists. Skipping.", cfg.profile_name);
+        return Ok(());
+    }
+
+    // Build new config sections
+    let profile_section = format!(
+        "\n{}\nsso_session = {}\nsso_account_id = {}\nsso_role_name = {}\nregion = {}\noutput = {}\n",
+        profile_header,
+        cfg.sso_session_name,
+        cfg.sso_account_id,
+        cfg.sso_role_name,
+        cfg.region,
+        cfg.output_format
     );
+
+    let session_section = if !existing_content.contains(&session_header) {
+        format!(
+            "\n{}\nsso_start_url = {}\nsso_region = {}\nsso_registration_scopes = sso:account:access\n",
+            session_header, cfg.start_url, cfg.region
+        )
+    } else {
+        String::new()
+    };
+
+    // Append to config file
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&config_path)
+        .map_err(|e| {
+            StoolError::new(StoolErrorType::AwsCommandFailed)
+                .with_message("Failed to open ~/.aws/config for writing")
+                .with_source(e)
+        })?;
+
+    file.write_all(profile_section.as_bytes()).map_err(|e| {
+        StoolError::new(StoolErrorType::AwsCommandFailed)
+            .with_message("Failed to write profile to ~/.aws/config")
+            .with_source(e)
+    })?;
+
+    if !session_section.is_empty() {
+        file.write_all(session_section.as_bytes()).map_err(|e| {
+            StoolError::new(StoolErrorType::AwsCommandFailed)
+                .with_message("Failed to write session to ~/.aws/config")
+                .with_source(e)
+        })?;
+    }
+
     Ok(())
 }
 
@@ -115,11 +181,15 @@ fn select_sso_config(configs: &[SsoConfig]) -> Result<Option<SsoConfig>> {
         let sso_session_name = interactive::input_text("SSO session name:")?;
         let start_url = interactive::input_text("SSO start URL:")?;
         let region = interactive::input_text("Region:")?;
+        let sso_account_id = interactive::input_text("AWS Account ID:")?;
+        let sso_role_name = interactive::input_text("IAM Role name:")?;
         return Ok(Some(SsoConfig {
             profile_name,
             sso_session_name,
             start_url,
             region,
+            sso_account_id,
+            sso_role_name,
             output_format: "json".to_string(),
         }));
     } else if selection < configs.len() {

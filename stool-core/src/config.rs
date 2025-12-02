@@ -43,6 +43,10 @@ pub struct SsoConfig {
     pub sso_session_name: String,
     pub start_url: String,
     pub region: String,
+    /// AWS account ID for SSO profile
+    pub sso_account_id: String,
+    /// IAM role name for SSO profile
+    pub sso_role_name: String,
     #[serde(default = "default_output_format")]
     pub output_format: String,
 }
