@@ -247,9 +247,8 @@ stool -a login                  # SSO login/token refresh
 
 **SSO Configure Workflow:**
 1. Select SSO config from YAML or manual input
-2. Auto-fill: session name, start URL, region, scopes
-3. Manual: browser auth, account/role selection (arrow keys)
-4. Auto-fill: default region, output format, profile name
+2. Write profile directly to `~/.aws/config` (bypasses interactive UI)
+3. Auto run `aws sso login` for browser authentication
 
 ### Shell Completion
 ```bash
@@ -300,6 +299,8 @@ sso_configs:
     sso_session_name: "my-sso"      # SSO session name
     start_url: "https://company.awsapps.com/start"
     region: "ap-northeast-2"
+    sso_account_id: "123456789012"  # AWS account ID
+    sso_role_name: "MyRole"         # IAM role name
     output_format: "json"           # Optional: default is json
 ```
 
