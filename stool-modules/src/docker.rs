@@ -275,25 +275,31 @@ fn execute_docker(args: &[&str]) -> Result<()> {
 /// Retrieves latest version tag from ECR repository.
 /// Finds the highest semantic version (x.y.z) among all image tags.
 fn get_latest_ecr_version(registry: &EcrRegistry, image_name: &str) -> Result<Option<String>> {
-    let output = Command::new("aws")
-        .args([
-            "ecr",
-            "describe-images",
-            "--repository-name",
-            image_name,
-            "--region",
-            &registry.region,
-            "--query",
-            "imageDetails[*].imageTags[]",
-            "--output",
-            "text",
-        ])
-        .output()
-        .map_err(|e| {
-            StoolError::new(StoolErrorType::CommandExecutionFailed)
-                .with_message("Failed to execute aws ecr describe-images")
-                .with_source(e)
-        })?;
+    let mut args = vec![
+        "ecr",
+        "describe-images",
+        "--repository-name",
+        image_name,
+        "--region",
+        &registry.region,
+        "--query",
+        "imageDetails[*].imageTags[]",
+        "--output",
+        "text",
+    ];
+
+    let profile_flag;
+    if let Some(ref profile) = registry.sso_profile {
+        profile_flag = profile.clone();
+        args.push("--profile");
+        args.push(&profile_flag);
+    }
+
+    let output = Command::new("aws").args(&args).output().map_err(|e| {
+        StoolError::new(StoolErrorType::CommandExecutionFailed)
+            .with_message("Failed to execute aws ecr describe-images")
+            .with_source(e)
+    })?;
 
     if !output.status.success() {
         // Repository might not exist or be empty
