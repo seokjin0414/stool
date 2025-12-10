@@ -273,6 +273,7 @@ fn execute_docker(args: &[&str]) -> Result<()> {
 }
 
 /// Retrieves latest version tag from ECR repository.
+/// Finds the highest semantic version (x.y.z) among all image tags.
 fn get_latest_ecr_version(registry: &EcrRegistry, image_name: &str) -> Result<Option<String>> {
     let output = Command::new("aws")
         .args([
@@ -283,7 +284,7 @@ fn get_latest_ecr_version(registry: &EcrRegistry, image_name: &str) -> Result<Op
             "--region",
             &registry.region,
             "--query",
-            "sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]",
+            "imageDetails[*].imageTags[]",
             "--output",
             "text",
         ])
@@ -299,11 +300,19 @@ fn get_latest_ecr_version(registry: &EcrRegistry, image_name: &str) -> Result<Op
         return Ok(None);
     }
 
-    let version_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let tags_str = String::from_utf8_lossy(&output.stdout);
 
-    if version_str.is_empty() || version_str == "None" {
-        Ok(None)
-    } else {
-        Ok(Some(version_str))
-    }
+    // Find highest semantic version from all tags
+    let max_version = tags_str
+        .split_whitespace()
+        .filter_map(|tag| Version::parse(tag).map(|v| (tag.to_string(), v)))
+        .max_by(|(_, a), (_, b)| {
+            a.major
+                .cmp(&b.major)
+                .then(a.middle.cmp(&b.middle))
+                .then(a.minor.cmp(&b.minor))
+        })
+        .map(|(tag, _)| tag);
+
+    Ok(max_version)
 }
