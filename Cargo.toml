@@ -14,8 +14,8 @@ authors = ["seokjin0414 <sars21@hanmail.net>"]
 license = "MIT"
 
 [workspace.dependencies]
-clap = { version = "4.5.51", default-features = false, features = ["std", "derive", "help", "usage", "error-context"] }
-clap_complete = { version = "4.5.60", default-features = false }
+clap = { version = "4.5.53", default-features = false, features = ["std", "derive", "help", "usage", "error-context"] }
+clap_complete = { version = "4.5.61", default-features = false }
 serde = { version = "1.0.228", default-features = false, features = ["std", "derive"] }
 serde_yaml = { version = "0.9.33", default-features = false }
 dialoguer = { version = "0.12.0", default-features = false, features = ["completion", "password"] }
