@@ -5,7 +5,7 @@
 
   A personal CLI tool for Mac/Linux terminal tasks written in Rust.
 
-  **Tech Stack:** Rust 2024 Edition
+  **Tech Stack:** Rust 2024 Edition (1.94.0+)
 </div>
 
 ## Quick Start
@@ -65,6 +65,7 @@ stool --help
   - Tag: `{image}:latest`
   - Image selection from config or manual input
 - **Push**: Build, tag, and push to AWS ECR
+  - **Auto SSO/ECR login**: checks SSO session, logs in if expired, then ECR login
   - Automatic version management with ECR integration
   - Version types: major, middle, minor (minor default)
   - Initial version: `0.1.0`
@@ -223,13 +224,14 @@ stool -d push -c config.yaml           # Use external config file
 
 **Workflow:**
 1. Select ECR registry from config
-2. Select or input Docker image name
-3. (For push) Build image with `--platform linux/arm64 --provenance=false --sbom=false`
-4. (For push) Select version type:
+2. (For push) Auto SSO/ECR login (checks session, logs in if needed)
+3. Select or input Docker image name
+4. (For push) Build image with `--platform linux/arm64 --provenance=false --sbom=false`
+5. (For push) Select version type:
    - major: 0.1.0 → 1.0.0
    - middle: 0.1.0 → 0.2.0
    - minor: 0.1.0 → 0.1.1 (default)
-5. (For push) Tag and push both `latest` and version tags
+6. (For push) Tag and push both `latest` and version tags
 
 ### AWS CLI
 ```bash
@@ -369,7 +371,7 @@ stool/
 
 **Architecture Highlights:**
 - Modular workspace structure with clear separation of concerns
-- Unified error handling across all modules (25 error types)
+- Unified error handling across all modules (24 error types)
 - Shared utilities eliminate code duplication (91 lines reduced)
 - Optimized for binary size and performance (LTO, strip, single codegen)
 - Comprehensive documentation (25 public functions documented)
@@ -395,7 +397,7 @@ stool/
 ### Code Quality Standards
 
 **Error Handling:**
-- All errors use unified `StoolErrorType` enum (25 variants)
+- All errors use unified `StoolErrorType` enum (24 variants)
 - All error messages in English for consistency
 - `unwrap()` is completely prohibited; use `?` operator or `map_err()`
 - Error messages include contextual information (user@ip, paths, etc.)
