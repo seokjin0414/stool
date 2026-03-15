@@ -11,6 +11,8 @@ use stool_core::config::EcrRegistry;
 use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::interactive;
 
+use crate::aws;
+
 /// Default Docker build options for multi-platform support.
 const DEFAULT_BUILD_OPTIONS: &[&str] = &[
     "--platform",
@@ -173,6 +175,16 @@ pub fn push_to_ecr(registries: &[EcrRegistry]) -> Result<()> {
 
     let registry_idx = interactive::select_from_list("Select ECR registry:", &registry_items)?;
     let registry = &registries[registry_idx];
+
+    // Ensure SSO and ECR login before build
+    if let Some(ref profile) = registry.sso_profile {
+        aws::ensure_sso_login(profile)?;
+    }
+    aws::execute_ecr_login(
+        &registry.account_id,
+        &registry.region,
+        registry.sso_profile.as_deref(),
+    )?;
 
     // Select or input image name
     let image_name = select_image_name(registry)?;
