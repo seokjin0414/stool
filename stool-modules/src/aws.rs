@@ -295,7 +295,7 @@ pub fn ecr_login(registries: &[EcrRegistry]) -> Result<()> {
 }
 
 /// Check SSO session validity and login if expired.
-fn ensure_sso_login(profile: &str) -> Result<()> {
+pub fn ensure_sso_login(profile: &str) -> Result<()> {
     // Check if SSO session is valid
     let check = Command::new("aws")
         .args(["sts", "get-caller-identity", "--profile", profile])
@@ -405,7 +405,7 @@ fn select_ecr_registry(
 }
 
 /// Execute ECR login command.
-fn execute_ecr_login(account_id: &str, region: &str, profile: Option<&str>) -> Result<()> {
+pub fn execute_ecr_login(account_id: &str, region: &str, profile: Option<&str>) -> Result<()> {
     use std::io::Write;
     use zeroize::Zeroize;
 
