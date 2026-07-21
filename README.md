@@ -40,6 +40,7 @@ stool --help
 ### System Update
 - Update Homebrew packages
 - Update Rust toolchain
+- Update Claude Code CLI
 - Selective or batch updates
 
 ### Filesystem Operations
@@ -180,10 +181,11 @@ stool ssh --config servers.yaml    # Use external config file
 
 ### System Update
 ```bash
-stool update           # Update both brew and rustup
+stool update           # Update brew, rustup, and claude
 stool -u               # Short flag
 stool -u --brew        # Update Homebrew only
 stool -u --rustup      # Update Rust toolchain only
+stool -u --claude      # Update Claude Code only
 ```
 
 ### Filesystem Operations
@@ -359,7 +361,7 @@ stool/
 │   └── error.rs       # Unified error types and Result alias
 ├── stool-modules/     # Feature modules (ssh, update, filesystem, transfer, docker, aws)
 │   ├── ssh.rs         # SSH connection with server selection
-│   ├── update.rs      # System updates (brew, rustup)
+│   ├── update.rs      # System updates (brew, rustup, claude)
 │   ├── filesystem.rs  # File search and count operations
 │   ├── transfer.rs    # SCP file transfer (upload/download)
 │   ├── docker.rs      # Docker operations (build, ECR push with version management)

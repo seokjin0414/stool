@@ -38,14 +38,16 @@ enum Commands {
     },
     #[command(
         short_flag = 'u',
-        about = "System updates (brew, rustup)",
-        long_about = "Update system packages and toolchains\n\nOptions:\n  --brew   - Update Homebrew packages only\n  --rustup - Update Rust toolchain only\n  (no flags) - Update both brew and rustup"
+        about = "System updates (brew, rustup, claude)",
+        long_about = "Update system packages and toolchains\n\nOptions:\n  --brew   - Update Homebrew packages only\n  --rustup - Update Rust toolchain only\n  --claude - Update Claude Code only\n  (no flags) - Update brew, rustup, and claude"
     )]
     Update {
         #[arg(long, help = "Update Homebrew only")]
         brew: bool,
         #[arg(long, help = "Update Rust toolchain only")]
         rustup: bool,
+        #[arg(long, help = "Update Claude Code only")]
+        claude: bool,
     },
     #[command(
         short_flag = 'f',
@@ -187,9 +189,14 @@ fn main() -> Result<()> {
             };
             ssh::connect(&cfg.servers)?;
         }
-        Some(Commands::Update { brew, rustup }) => match (brew, rustup) {
-            (true, false) => update::update_brew()?,
-            (false, true) => update::update_rustup()?,
+        Some(Commands::Update {
+            brew,
+            rustup,
+            claude,
+        }) => match (brew, rustup, claude) {
+            (true, false, false) => update::update_brew()?,
+            (false, true, false) => update::update_rustup()?,
+            (false, false, true) => update::update_claude()?,
             _ => update::update_all()?,
         },
         Some(Commands::Filesystem { command }) => match command {
