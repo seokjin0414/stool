@@ -3,6 +3,7 @@
 //! Provides commands to update system components:
 //! - Homebrew packages
 //! - Rust toolchain via rustup
+//! - Claude Code CLI
 
 use stool_core::error::{Result, StoolError, StoolErrorType};
 use stool_utils::command;
@@ -38,7 +39,22 @@ pub fn update_rustup() -> Result<()> {
     Ok(())
 }
 
-/// Updates both Homebrew and Rust toolchain.
+/// Updates Claude Code CLI.
+///
+/// Executes `claude update` to update the Claude Code CLI to the latest version.
+///
+/// # Errors
+/// Returns error if claude command fails
+pub fn update_claude() -> Result<()> {
+    println!("Updating Claude Code");
+
+    command::execute_command("claude", &["update"], StoolErrorType::ClaudeUpdateFailed)?;
+
+    println!("Claude Code updated successfully");
+    Ok(())
+}
+
+/// Updates Homebrew, Rust toolchain, and Claude Code.
 ///
 /// Continues execution even if one update fails, reporting all failures
 /// at the end.
@@ -56,6 +72,11 @@ pub fn update_all() -> Result<()> {
     if let Err(e) = update_rustup() {
         eprintln!("Rustup update failed: {}", e);
         errors.push("rustup");
+    }
+
+    if let Err(e) = update_claude() {
+        eprintln!("Claude update failed: {}", e);
+        errors.push("claude");
     }
 
     if errors.is_empty() {

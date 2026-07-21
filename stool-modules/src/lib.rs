@@ -2,7 +2,7 @@
 //!
 //! This crate contains all major functionality modules:
 //! - SSH connection management
-//! - System update operations (Homebrew, Rust)
+//! - System update operations (Homebrew, Rust, Claude Code)
 //! - Filesystem operations (find, count)
 //! - File transfer via SCP
 //! - Docker operations (build, tag, push to ECR)

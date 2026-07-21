@@ -36,6 +36,7 @@ pub enum StoolErrorType {
     // Update related
     BrewUpdateFailed,
     RustupUpdateFailed,
+    ClaudeUpdateFailed,
 
     // Docker related
     DockerCommandFailed,
@@ -75,6 +76,7 @@ impl fmt::Display for StoolErrorType {
 
             Self::BrewUpdateFailed => write!(f, "brew update failed"),
             Self::RustupUpdateFailed => write!(f, "rustup update failed"),
+            Self::ClaudeUpdateFailed => write!(f, "claude update failed"),
 
             Self::DockerCommandFailed => write!(f, "Docker command failed"),
             Self::DockerNotInstalled => write!(f, "Docker not installed"),
