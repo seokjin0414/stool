@@ -79,15 +79,31 @@ echo "✅ Installed to $STOOL_DIR/stool"
 
 # 커맨드 등록 (심볼릭 링크)
 echo "🔗 Creating symbolic link..."
-SYMLINK_PATH="/usr/local/bin/stool"
 
-if [ -w "/usr/local/bin" ]; then
+if echo "$PATH" | tr ':' '\n' | grep -qxF "$HOME/.local/bin"; then
+    # $HOME/.local/bin이 이미 PATH에 등록되어 있으면 sudo 없이 여기에 설치
+    mkdir -p "$HOME/.local/bin"
+    SYMLINK_PATH="$HOME/.local/bin/stool"
     ln -sf "$STOOL_DIR/stool" "$SYMLINK_PATH"
     echo "✅ Command registered to $SYMLINK_PATH"
 else
-    echo "⚠️  Permission required. Running with sudo..."
-    sudo ln -sf "$STOOL_DIR/stool" "$SYMLINK_PATH"
-    echo "✅ Command registered to $SYMLINK_PATH"
+    # PATH에 없으면 /usr/local/bin으로 폴백
+    BIN_DIR="/usr/local/bin"
+    SYMLINK_PATH="$BIN_DIR/stool"
+
+    if [ -d "$BIN_DIR" ] && [ -w "$BIN_DIR" ] && [ -x "$BIN_DIR" ]; then
+        ln -sf "$STOOL_DIR/stool" "$SYMLINK_PATH"
+        echo "✅ Command registered to $SYMLINK_PATH"
+    else
+        echo "⚠️  Permission required. Running with sudo..."
+        sudo mkdir -p "$BIN_DIR"
+        # 디렉토리 권한이 0700(root 전용)이면 심볼릭 링크가 생성되어도
+        # 일반 사용자는 디렉토리를 통과(traverse)할 수 없어 command -v stool이
+        # 실패하므로, 755 권한을 보장해준다
+        sudo chmod 755 "$BIN_DIR"
+        sudo ln -sf "$STOOL_DIR/stool" "$SYMLINK_PATH"
+        echo "✅ Command registered to $SYMLINK_PATH"
+    fi
 fi
 
 # Zsh completion 설치
@@ -116,6 +132,7 @@ else
 fi
 
 # 설치 확인
+hash -r 2>/dev/null || true
 if command -v stool &> /dev/null; then
     STOOL_VERSION=$(stool --version 2>&1 || echo "version check failed")
     echo "🎉 Installation completed successfully!"
@@ -129,5 +146,13 @@ if command -v stool &> /dev/null; then
     echo "   stool -a conf      # AWS configure"
 else
     echo "❌ Installation verification failed"
+    echo ""
+    echo "🔍 문제 해결 방법:"
+    echo "   1) 설치 경로가 \$PATH에 없을 수 있습니다."
+    echo "      -> 새 터미널을 열거나 'hash -r' 실행 후 다시 확인해보세요."
+    echo "   2) 설치 경로에 접근 권한이 없을 수 있습니다."
+    echo "      -> ls -ld \"$(dirname "$SYMLINK_PATH")\" 로 권한을 확인해보세요."
+    echo "      -> drwx------ 처럼 표시된다면 다음 명령으로 권한을 수정하세요:"
+    echo "         sudo chmod 755 \"$(dirname "$SYMLINK_PATH")\""
     exit 1
 fi
